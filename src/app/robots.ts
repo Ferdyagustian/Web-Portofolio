@@ -8,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
       },
     ],
-    sitemap: 'https://ferdyagustian.vercel.app/sitemap.xml',
+    sitemap: 'https://slowwalkferdy.vercel.app/sitemap.xml',
   };
 }

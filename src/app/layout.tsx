@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Ferdy Agustian | AI Enthusiast & Full-Stack Developer',
     description: 'Explore the interactive pixel-art portfolio of Ferdy Agustian — featuring AI projects, web development work, and a 3D immersive experience built with Three.js.',
-    url: 'https://ferdyagustian.vercel.app',
+    url: 'https://slowwalkferdy.vercel.app',
     siteName: 'Ferdy Agustian Portfolio',
     locale: 'id_ID',
     type: 'website',
