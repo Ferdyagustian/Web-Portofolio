@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useMemo, useEffect } from "react";
+import { Move } from "lucide-react";
 import ProjectSignboard from "./ProjectSignboard";
 
 interface Project {
@@ -409,13 +410,12 @@ export default function ProjectMap({ projects }: ProjectMapProps) {
           </div>
           <div
             style={{
-              fontSize: "1.8rem",
               color: "var(--color-pixel-leaf)",
               animation: "bounceHint 2s infinite",
-              textShadow: "0 0 10px rgba(74,222,128,0.5)",
+              filter: "drop-shadow(0 0 6px rgba(74,222,128,0.5))",
             }}
           >
-            ↔ ↕
+            <Move size={32} strokeWidth={2.5} />
           </div>
         </div>
       )}

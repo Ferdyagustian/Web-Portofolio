@@ -4,10 +4,37 @@ import LenisProvider from '../providers/LenisProvider';
 import GSAPProvider from '../providers/GSAPProvider';
 
 export const metadata: Metadata = {
-  title: 'Ferdy Agustian | AI Enthusiast & Developer',
-  description: 'Portfolio of Ferdy Agustian, CS Undergraduate Student and AI Enthusiast.',
+  title: 'Ferdy Agustian | AI Enthusiast & Full-Stack Developer Portfolio',
+  description: 'Portfolio of Ferdy Agustian Prasetyo — CS Undergraduate, AI Enthusiast, and Full-Stack Developer. Skilled in React, Next.js, Three.js, Python, and Machine Learning.',
+  keywords: ['Ferdy Agustian', 'portfolio', 'AI enthusiast', 'full-stack developer', 'React', 'Next.js', 'Three.js', 'machine learning', 'web developer Indonesia', 'Universitas Gunadarma'],
+  authors: [{ name: 'Ferdy Agustian Prasetyo' }],
+  creator: 'Ferdy Agustian Prasetyo',
   icons: {
     icon: '/favicon.ico',
+  },
+  openGraph: {
+    title: 'Ferdy Agustian | AI Enthusiast & Full-Stack Developer',
+    description: 'Explore the interactive pixel-art portfolio of Ferdy Agustian — featuring AI projects, web development work, and a 3D immersive experience built with Three.js.',
+    url: 'https://ferdyagustian.vercel.app',
+    siteName: 'Ferdy Agustian Portfolio',
+    locale: 'id_ID',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Ferdy Agustian | AI Enthusiast & Developer',
+    description: 'Interactive pixel-art portfolio — AI, Web Dev, and Three.js.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 
@@ -35,6 +62,7 @@ const vt323 = VT323({
 
 import PixelCursor from '../components/ui/PixelCursor';
 import Navbar from '../components/layout/Navbar';
+import TimeThemeProvider from '../providers/TimeThemeProvider';
 
 export default function RootLayout({
   children,
@@ -42,16 +70,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" style={{ scrollBehavior: 'smooth' }} className={`${sixtyfour.variable} ${pixelify.variable} ${vt323.variable}`}>
+    <html lang="id" style={{ scrollBehavior: 'smooth' }} className={`${sixtyfour.variable} ${pixelify.variable} ${vt323.variable}`}>
       <body>
-        <div className="scanlines"></div>
-        <PixelCursor />
-        <Navbar />
-        <LenisProvider>
-          <GSAPProvider>
-            {children}
-          </GSAPProvider>
-        </LenisProvider>
+        <TimeThemeProvider>
+          <div className="scanlines"></div>
+          <PixelCursor />
+          <Navbar />
+          <LenisProvider>
+            <GSAPProvider>
+              {children}
+            </GSAPProvider>
+          </LenisProvider>
+        </TimeThemeProvider>
       </body>
     </html>
   );

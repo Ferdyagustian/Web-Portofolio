@@ -6,10 +6,13 @@ import DialogueBox from '../components/ui/DialogueBox';
 import PixelCard from '../components/ui/PixelCard';
 import PixelButton from '../components/ui/PixelButton';
 import ProjectGallery from '../components/ui/ProjectGallery';
+import { useTheme } from '../providers/TimeThemeProvider';
+
 
 export default function Home() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const theme = useTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,8 +38,8 @@ export default function Home() {
 
   return (
     <main style={{ position: 'relative' }}>
-      {/* 3D Background */}
-      <PixelForest />
+      {/* 3D Background — theme-aware */}
+      <PixelForest theme={theme} />
 
       {/* Scrollable Content Layers */}
       <div style={{ position: 'relative', zIndex: 10 }}>
@@ -146,7 +149,7 @@ export default function Home() {
               </ul>
             </PixelCard>
 
-            <PixelCard title="Tools & Others">
+            <PixelCard title="Tools &amp; Others">
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 <li>▸ Git, GitHub</li>
                 <li>▸ Docker</li>

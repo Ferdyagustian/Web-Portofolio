@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Project {
   title: string;
@@ -435,7 +436,7 @@ export default function MobileCarousel({ projects }: MobileCarouselProps) {
           }}
           className="pixel-font"
         >
-          ◀
+          <ChevronLeft size={20} strokeWidth={3} />
         </button>
       )}
 
@@ -474,7 +475,7 @@ export default function MobileCarousel({ projects }: MobileCarouselProps) {
           }}
           className="pixel-font"
         >
-          ▶
+          <ChevronRight size={20} strokeWidth={3} />
         </button>
       )}
 

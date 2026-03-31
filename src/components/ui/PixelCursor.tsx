@@ -38,8 +38,7 @@ export default function PixelCursor() {
         border: "2px solid var(--color-forest-dark)",
         pointerEvents: "none",
         zIndex: 99999,
-        mixBlendMode: "difference",
-        // Pixelate the div
+        // Removed mixBlendMode for performance
         boxShadow: "2px 2px 0 0 rgba(0,0,0,0.5)",
       }}
       className="pixel-cursor"
