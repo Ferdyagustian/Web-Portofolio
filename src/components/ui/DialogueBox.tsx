@@ -35,8 +35,8 @@ export default function DialogueBox({ children, title, className = "", style }: 
           color: 'var(--color-cream)',
           padding: '4px 12px',
           border: '2px solid var(--color-moss-green)',
-          fontFamily: "'Press Start 2P', cursive",
-          fontSize: '0.8rem',
+          fontFamily: "var(--font-sixtyfour), cursive",
+          fontSize: '0.75rem',
           boxShadow: '4px 4px 0px 0px rgba(0,0,0,0.5)',
         }}>
           {title}

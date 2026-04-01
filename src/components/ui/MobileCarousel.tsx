@@ -61,11 +61,12 @@ export default function MobileCarousel({ projects }: MobileCarouselProps) {
     };
   }, [startArrowTimer]);
 
-  // Detect scroll to update current index and restart timer
+  // Detect scroll to update interaction states and restart timer
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
 
+    let isScrolling: any;
     const handleScroll = () => {
       if (!hasInteracted) {
         setHasInteracted(true);
@@ -73,16 +74,39 @@ export default function MobileCarousel({ projects }: MobileCarouselProps) {
       }
       setShowArrow(false);
       startArrowTimer();
-
-      const scrollLeft = el.scrollLeft;
-      const cardWidth = el.offsetWidth * 0.88 + 16;
-      const newIndex = Math.round(scrollLeft / cardWidth);
-      setCurrentIndex(newIndex);
     };
 
     el.addEventListener("scroll", handleScroll, { passive: true });
     return () => el.removeEventListener("scroll", handleScroll);
   }, [startArrowTimer, hasInteracted]);
+
+  // Use IntersectionObserver to accurately track the active card centered on the screen
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const index = Number(entry.target.getAttribute("data-index"));
+            if (!isNaN(index)) {
+              setCurrentIndex(index);
+            }
+          }
+        });
+      },
+      {
+        root: el,
+        threshold: 0.6, // Trigger when at least 60% of the card is visible
+      }
+    );
+
+    const cards = el.querySelectorAll(".carousel-card");
+    cards.forEach((card) => observer.observe(card));
+
+    return () => observer.disconnect();
+  }, [projects.length]);
 
   const scrollToIndex = (idx: number) => {
     const el = scrollRef.current;
@@ -172,6 +196,8 @@ export default function MobileCarousel({ projects }: MobileCarouselProps) {
           return (
             <div
               key={i}
+              className="carousel-card"
+              data-index={i}
               style={{
                 flex: "0 0 88%",
                 scrollSnapAlign: "center",

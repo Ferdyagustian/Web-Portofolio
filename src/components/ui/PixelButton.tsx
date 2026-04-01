@@ -13,7 +13,7 @@ export default function PixelButton({ children, variant = "primary", className =
   
   // Calculate dynamic effects
   const baseShadow = '4px 4px 0px 0px rgba(0,0,0,0.5)';
-  const glowColor = isPrimary ? 'rgba(74, 222, 128, 0.4)' : 'rgba(255, 255, 255, 0.2)';
+  const glowColor = isPrimary ? 'rgba(109, 216, 146, 0.35)' : 'rgba(240, 197, 94, 0.2)';
   const hoverShadow = `4px 8px 0px 0px rgba(0,0,0,0.5), 0px 0px 15px 4px ${glowColor}`;
   const activeShadow = '0px 0px 0px 0px rgba(0,0,0,0.5)';
   

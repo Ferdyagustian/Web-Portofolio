@@ -20,7 +20,7 @@ const v = new THREE.Vector3();
 /* ===== Sky Dome (Locks Z to Camera to simulate infinity) ===== */
 function SkyDome({ children }: { children: React.ReactNode }) {
   const groupRef = useRef<THREE.Group>(null);
-  
+
   useFrame((state) => {
     if (groupRef.current) {
       // Get exact absolute camera position so sky and sun always stay perfectly far away
@@ -122,7 +122,7 @@ function DynamicSky({ theme }: { theme: TimeTheme }) {
       side: THREE.BackSide,
       depthWrite: false,
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -137,7 +137,7 @@ function DynamicSky({ theme }: { theme: TimeTheme }) {
 function CelestialBody({ theme }: { theme: TimeTheme }) {
   const groupRef = useRef<THREE.Group>(null);
   const configRef = useRef(THEME_CONFIGS[theme]);
-  
+
   // Color refs for lerping
   const coreColor = useRef(new THREE.Color(THEME_CONFIGS[theme].celestialCoreColor));
   const innerColor = useRef(new THREE.Color(THEME_CONFIGS[theme].celestialInnerGlow));
@@ -152,7 +152,7 @@ function CelestialBody({ theme }: { theme: TimeTheme }) {
   const innerMat = useRef<THREE.MeshBasicMaterial>(null);
   const outerMat = useRef<THREE.MeshBasicMaterial>(null);
   const hazeMat = useRef<THREE.MeshBasicMaterial>(null);
-  
+
   const raysGroup = useRef<THREE.Group>(null);
   const cratersGroup = useRef<THREE.Group>(null);
   const rayMultiplier = useRef(THEME_CONFIGS[theme].celestialType === 'sun' ? 1 : 0);
@@ -175,7 +175,7 @@ function CelestialBody({ theme }: { theme: TimeTheme }) {
     lerpColor(innerColor.current, new THREE.Color(cfg.celestialInnerGlow), LERP_SPEED);
     lerpColor(outerColor.current, new THREE.Color(cfg.celestialOuterGlow), LERP_SPEED);
     lerpColor(hazeColor.current, new THREE.Color(cfg.celestialHaze), LERP_SPEED);
-    
+
     // Lerp size
     currentSize.current = lerpNum(currentSize.current, cfg.celestialCoreSize, LERP_SPEED);
 
@@ -186,7 +186,7 @@ function CelestialBody({ theme }: { theme: TimeTheme }) {
     if (hazeMat.current) hazeMat.current.color.copy(hazeColor.current);
 
     // Gentle pulse
-    const pulse = 1 + Math.sin(state.clock.elapsedTime * 0.6) * 0.03;
+    const pulse = cfg.celestialType === 'moon' ? 1.0 : (1 + Math.sin(state.clock.elapsedTime * 0.6) * 0.03);
     const s = currentSize.current / 3; // Normalize to base scale
     groupRef.current.scale.set(pulse * s, pulse * s, pulse * s);
 
@@ -217,7 +217,7 @@ function CelestialBody({ theme }: { theme: TimeTheme }) {
         <boxGeometry args={[3, 3, 0.5]} />
         <meshBasicMaterial ref={coreMat} color={THEME_CONFIGS[theme].celestialCoreColor} />
       </mesh>
-      
+
       {/* Moon Craters (visible only when moon) */}
       <group ref={cratersGroup} position={[0, 0, 0.26]}>
         <mesh position={[0.5, 0.5, 0]}>
@@ -313,7 +313,7 @@ function Stars({ theme }: { theme: TimeTheme }) {
     if (!particles.current) return;
     const target = configRef.current.showStars ? 0.8 : 0;
     opacityRef.current = lerpNum(opacityRef.current, target, LERP_SPEED);
-    
+
     const mat = particles.current.material as THREE.PointsMaterial;
     mat.opacity = opacityRef.current;
 
@@ -367,7 +367,7 @@ function DynamicClouds({ theme }: { theme: TimeTheme }) {
     if (!groupRef.current) return;
     const cfg = configRef.current;
     currentOpacity.current = lerpNum(currentOpacity.current, cfg.cloudOpacity, LERP_SPEED);
-    
+
     groupRef.current.children.forEach((child, i) => {
       const mesh = child as THREE.Mesh;
       const mat = mesh.material as THREE.MeshBasicMaterial;
@@ -399,7 +399,7 @@ function DynamicClouds({ theme }: { theme: TimeTheme }) {
 function SceneController({ theme }: { theme: TimeTheme }) {
   const { scene } = useThree();
   const configRef = useRef(THEME_CONFIGS[theme]);
-  
+
   const ambientRef = useRef<THREE.AmbientLight>(null);
   const mainLightRef = useRef<THREE.DirectionalLight>(null);
   const fillLightRef = useRef<THREE.DirectionalLight>(null);
@@ -537,7 +537,7 @@ function CameraRig() {
 }
 
 function Fireflies({ theme }: { theme: TimeTheme }) {
-  const count = 50; // Reduced from 100
+  const count = 85;
   const particles = useRef<THREE.Points>(null);
   const configRef = useRef(THEME_CONFIGS[theme]);
 
@@ -551,22 +551,31 @@ function Fireflies({ theme }: { theme: TimeTheme }) {
       arr[i * 3 + 2] = -Math.random() * 60;
     }
     return arr;
-  }, []);
+  }, [count]);
 
   useFrame((state) => {
     if (!particles.current) return;
     const cfg = configRef.current;
     const mat = particles.current.material as THREE.PointsMaterial;
-    
+
     mat.opacity = lerpNum(mat.opacity, cfg.fireflyOpacity, LERP_SPEED);
     mat.size = lerpNum(mat.size, cfg.fireflySize, LERP_SPEED);
     lerpColor(mat.color, new THREE.Color(cfg.fireflyColor), LERP_SPEED);
 
     if (mat.opacity > 0.01) {
-      particles.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.1) * 0.1;
+      // Swirling wind rotation
+      particles.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.05) * 0.1;
       const posAttr = particles.current.geometry.attributes.position;
       for (let i = 0; i < count; i++) {
-        posAttr.setY(i, positions[i * 3 + 1] + Math.sin(state.clock.elapsedTime * 2 + i) * 0.5);
+        // Natural wind movement (Drifting along X and Z, floating on Y)
+        const t = state.clock.elapsedTime;
+        const windX = Math.sin(t * 0.2 + i * 0.3) * 2.5 + Math.sin(t * 0.1 + i) * 1.5;
+        const floatY = Math.sin(t * 0.5 + i) * 0.5;
+        const windZ = Math.cos(t * 0.2 + i * 0.4) * 2.0;
+
+        posAttr.setX(i, positions[i * 3 + 0] + windX);
+        posAttr.setY(i, positions[i * 3 + 1] + floatY);
+        posAttr.setZ(i, positions[i * 3 + 2] + windZ);
       }
       posAttr.needsUpdate = true;
     }
@@ -578,7 +587,7 @@ function Fireflies({ theme }: { theme: TimeTheme }) {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={cfg.fireflySize} color={cfg.fireflyColor} transparent opacity={cfg.fireflyOpacity} />
+      <pointsMaterial size={cfg.fireflySize} color={cfg.fireflyColor} transparent opacity={cfg.fireflyOpacity} depthWrite={false} blending={THREE.AdditiveBlending} />
     </points>
   );
 }
@@ -618,7 +627,7 @@ function GroundBushes({ theme }: { theme: TimeTheme }) {
 }
 
 function FallingLeaves({ theme }: { theme: TimeTheme }) {
-  const count = 50; // Reduced from 150
+  const count = 100; // Reduced from 150
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const matRef = useRef<THREE.MeshStandardMaterial>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
@@ -643,7 +652,7 @@ function FallingLeaves({ theme }: { theme: TimeTheme }) {
   useFrame((state) => {
     if (!meshRef.current) return;
     const cfg = configRef.current;
-    
+
     if (matRef.current) {
       lerpColor(matRef.current.color, new THREE.Color(cfg.leafParticleColor), LERP_SPEED);
       matRef.current.opacity = lerpNum(matRef.current.opacity, cfg.leafOpacity, LERP_SPEED);
@@ -696,25 +705,25 @@ export default function PixelForest({ theme }: { theme: TimeTheme }) {
       <Canvas>
         <color attach="background" args={[cfg.bgColor]} />
         <fog attach="fog" args={[cfg.fogColor, cfg.fogNear, cfg.fogFar]} />
-        
+
         <CameraRig />
         <SceneController theme={theme} />
-        
+
         {/* Sky Elements — Locked to camera Z to simulate infinite distance */}
         <SkyDome>
           {/* Sky background */}
           <DynamicSky theme={theme} />
-          
+
           {/* Celestial body (Sun/Moon) */}
           <CelestialBody theme={theme} />
-          
+
           {/* Stars (Night only) */}
           <Stars theme={theme} />
         </SkyDome>
-        
+
         {/* Clouds - Outside SkyDome so they exhibit parallax scrolling */}
         <DynamicClouds theme={theme} />
-        
+
         {/* Ground */}
         <Ground theme={theme} />
 
@@ -723,7 +732,7 @@ export default function PixelForest({ theme }: { theme: TimeTheme }) {
         <GroundBushes theme={theme} />
         <FallingLeaves theme={theme} />
         <Fireflies theme={theme} />
-        
+
         <EffectComposer multisampling={0}>
           <Pixelation granularity={5} />
         </EffectComposer>

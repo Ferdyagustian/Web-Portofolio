@@ -198,18 +198,18 @@ const MALAM: ThemeConfig = {
   skyBottom: '#1a3050',    // Dark teal horizon
 
   celestialType: 'moon',
-  celestialPosition: [12, 18, -80],  // Lowered slightly and centered more to ensure it is immediately visible
-  celestialCoreColor: '#f4f6ff',     // Bright white full moon
-  celestialInnerGlow: '#c6d0f5',     
-  celestialOuterGlow: '#94a5df',
-  celestialHaze: '#556699',          // Deep blue haze
-  celestialRayColor: '#c6d0f5',      // (Faded out for moon)
-  celestialCoreSize: 5.5,            // Larger, dominant moon
+  celestialPosition: [-45, 30, -80], // At the far left edge, completely stationary
+  celestialCoreColor: '#ffffff',     // Extremely bright pure white moon
+  celestialInnerGlow: '#ffffff',     // Pure white inner glow
+  celestialOuterGlow: '#f0f4ff',     // Very pale white outer glow
+  celestialHaze: '#d8e5ff',          // White luminous haze
+  celestialRayColor: '#ffffff',      // Faded out for moon anyway
+  celestialCoreSize: 6.5,            // Larger, very bright moon
 
-  ambientColor: '#203050',           // FIXED TYPO: previously #3040608
+  ambientColor: '#253555',           // Slightly lighter ambient
   ambientIntensity: 0.4,             // Increased intensity to light up the trees
-  mainLightColor: '#aab8e0',         // Bright moonlight color
-  mainLightIntensity: 1.0,           // Strong moonlight casting to highlight leaves
+  mainLightColor: '#ffffff',         // Pure white moonlight
+  mainLightIntensity: 1.2,           // Strong moonlight casting to highlight leaves
   mainLightPosition: [12, 18, -20],
   fillLightColor: '#223355',
   fillLightIntensity: 0.4,
@@ -225,9 +225,9 @@ const MALAM: ThemeConfig = {
   bushColor: '#0c2018',
   leafParticleColor: '#445577',
   leafOpacity: 0.3,
-  fireflyColor: '#fbbf24',
+  fireflyColor: '#ffea70',
   fireflyOpacity: 1.0,
-  fireflySize: 0.15,
+  fireflySize: 0.28,
 
   cloudColors: [],
   cloudOpacity: 0,
