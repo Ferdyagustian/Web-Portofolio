@@ -230,9 +230,12 @@ export default function Home() {
     });
   }, { scope: container });
 
+  const [errorMessage, setErrorMessage] = useState('');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('loading');
+    setErrorMessage('');
 
     try {
       const res = await fetch('/api/contact', {
@@ -241,14 +244,18 @@ export default function Home() {
         body: JSON.stringify(formData)
       });
 
+      const data = await res.json();
+
       if (res.ok) {
         setStatus('success');
         setFormData({ name: '', email: '', message: '' });
       } else {
         setStatus('error');
+        setErrorMessage(data.error || 'Terjadi kesalahan sistem.');
       }
     } catch {
       setStatus('error');
+      setErrorMessage('Terjadi kesalahan koneksi.');
     }
   };
 
@@ -425,8 +432,8 @@ export default function Home() {
                 <PixelButton type="submit" disabled={status === 'loading'} style={{ width: '100%', marginTop: '0.5rem', opacity: status === 'loading' ? 0.5 : 1 }}>
                   {status === 'loading' ? 'SENDING...' : 'SEND MESSAGE'}
                 </PixelButton>
-                {status === 'success' && <p style={{ color: 'var(--color-moss-green)', fontSize: '1.2rem', textAlign: 'center', marginTop: '0.5rem', fontFamily: "'VT323', monospace" }}>Berhasil dikirim , terimakasih telah mengirim pesan! :D</p>}
-                {status === 'error' && <p style={{ color: 'red', fontSize: '0.9rem', textAlign: 'center', marginTop: '0.5rem', fontFamily: "'VT323', monospace" }}>Gagal mengirim pesan.</p>}
+                {status === 'success' && <p style={{ color: 'var(--color-moss-green)', fontSize: '1.2rem', textAlign: 'center', marginTop: '0.5rem', fontFamily: "'VT323', monospace" }}>Berhasil dikirim, terimakasih telah mengirim pesan! :D</p>}
+                {status === 'error' && <p style={{ color: 'red', fontSize: '0.9rem', textAlign: 'center', marginTop: '0.5rem', fontFamily: "'VT323', monospace" }}>Gagal: {errorMessage}</p>}
               </form>
             </DialogueBox>
           </div>
