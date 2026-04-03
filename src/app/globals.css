@@ -488,3 +488,34 @@ button:focus-visible {
     font-size: 1rem;
   }
 }
+
+/* === GSAP Awwwards-Level Enhancements === */
+
+/* Hero box 3D parallax — preserve-3d for tilt effect */
+.hero-box-parallax {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+/* Nav link GSAP — ensure inline transform works */
+.nav-link-gsap {
+  will-change: transform, color;
+  backface-visibility: hidden;
+}
+
+/* Section titles — stepped retro entrance */
+.gsap-section-title {
+  will-change: transform, opacity;
+}
+
+/* Scroll arrow hint pulse glow */
+.hero-scroll-arrow span {
+  filter: drop-shadow(0 0 6px rgba(240, 230, 208, 0.4));
+}
+
+/* Mobile: disable parallax tilt on hero-box */
+@media (max-width: 768px) {
+  .hero-box-parallax {
+    transform: none !important;
+  }
+}

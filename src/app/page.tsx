@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import PixelForest from '../components/three/PixelForest';
 import DialogueBox from '../components/ui/DialogueBox';
 import PixelCard from '../components/ui/PixelCard';
@@ -22,9 +22,166 @@ export default function Home() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const theme = useTheme();
   const container = useRef<HTMLDivElement>(null);
+  const heroBoxRef = useRef<HTMLDivElement>(null);
+  const heroSectionRef = useRef<HTMLElement>(null);
+  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const arrowRef = useRef<HTMLDivElement>(null);
+
+  // Mouse parallax ref — useRef instead of useState to prevent re-renders!
+  // Re-renders were causing GroundBushes inline Math.random() to regenerate = spinning bushes
+  const mousePosRef = useRef({ x: 0, y: 0 });
+  const quickX = useRef<gsap.QuickToFunc | null>(null);
+  const quickY = useRef<gsap.QuickToFunc | null>(null);
+  const quickRotX = useRef<gsap.QuickToFunc | null>(null);
+  const quickRotY = useRef<gsap.QuickToFunc | null>(null);
+
+  // Setup gsap.quickTo for hero-box mouse parallax
+  useEffect(() => {
+    if (!heroBoxRef.current) return;
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    if (isMobile) return;
+
+    quickX.current = gsap.quickTo(heroBoxRef.current, "x", { duration: 0.6, ease: "power3.out" });
+    quickY.current = gsap.quickTo(heroBoxRef.current, "y", { duration: 0.6, ease: "power3.out" });
+    quickRotX.current = gsap.quickTo(heroBoxRef.current, "rotateX", { duration: 0.8, ease: "power3.out" });
+    quickRotY.current = gsap.quickTo(heroBoxRef.current, "rotateY", { duration: 0.8, ease: "power3.out" });
+
+    // Set perspective on parent for 3D tilt
+    if (heroBoxRef.current.parentElement) {
+      heroBoxRef.current.parentElement.style.perspective = "800px";
+    }
+  }, []);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    if (isMobile) return;
+
+    const { clientX, clientY } = e;
+    const { innerWidth, innerHeight } = window;
+    // Normalize to -1 to 1 — clamped to subtle range
+    const nx = (clientX / innerWidth - 0.5) * 2;
+    const ny = (clientY / innerHeight - 0.5) * 2;
+
+    // Update ref (no re-render!) — CameraRig reads this in useFrame
+    mousePosRef.current = { x: nx * 0.3, y: ny * 0.3 };
+
+    // Move hero-box very subtly — max ±8px horizontal, ±5px vertical
+    if (quickX.current) quickX.current(nx * 8);
+    if (quickY.current) quickY.current(ny * 5);
+    // 3D tilt — very subtle, max ±2 degrees
+    if (quickRotX.current) quickRotX.current(-ny * 2);
+    if (quickRotY.current) quickRotY.current(nx * 2);
+  }, []);
 
   useGSAP(() => {
-    // 1. RPG Bouncy Pop-in elements
+    // ============================================
+    // HERO ENTRANCE TIMELINE (Staggered Bounce-In)
+    // Only animate visual children, NOT the outer hero-box itself
+    // So the scrub dive effect can control hero-box independently
+    // ============================================
+
+    const heroTL = gsap.timeline({ delay: 0.1 });
+
+    // Letters stagger wave in — clearProps removes inline styles
+    // so CSS .wave-letter:hover transitions work after animation
+    heroTL.from('.wave-letter', {
+      y: -40,
+      opacity: 0,
+      duration: 0.5,
+      stagger: 0.05,
+      ease: "back.out(2)",
+      clearProps: "all",
+    });
+
+    // Subtitle fades in
+    if (subtitleRef.current) {
+      heroTL.from(subtitleRef.current, {
+        y: 15,
+        opacity: 0,
+        duration: 0.5,
+        ease: "power2.out",
+      }, "-=0.2");
+    }
+
+    // Arrow bounces in
+    if (arrowRef.current) {
+      heroTL.from(arrowRef.current, {
+        scale: 0,
+        opacity: 0,
+        duration: 0.5,
+        ease: "back.out(3)",
+      }, "-=0.2");
+    }
+
+    // ============================================
+    // DIVE EFFECT — Controlled by scroll scrub
+    // fromTo with immediateRender:false so it doesn’t
+    // interfere with the entrance animation above
+    // ============================================
+    if (heroBoxRef.current) {
+      gsap.fromTo(heroBoxRef.current,
+        { scale: 1, opacity: 1, y: 0, filter: 'blur(0px)' },
+        {
+          scale: 1.6,
+          opacity: 0,
+          y: -60,
+          filter: 'blur(5px)',
+          ease: 'none',
+          immediateRender: false, // KEY: don’t apply start values immediately
+          scrollTrigger: {
+            trigger: heroSectionRef.current,
+            start: 'top top',
+            end: 'bottom top',
+            scrub: 0.8,
+          },
+        }
+      );
+    }
+
+    // Arrow fades independently
+    if (arrowRef.current) {
+      gsap.fromTo(arrowRef.current,
+        { opacity: 1, y: 0 },
+        {
+          opacity: 0,
+          y: 20,
+          ease: 'none',
+          immediateRender: false,
+          scrollTrigger: {
+            trigger: heroSectionRef.current,
+            start: '10% top',
+            end: '40% top',
+            scrub: 0.8,
+          },
+        }
+      );
+    }
+
+    // ============================================
+    // SCROLL-UP REWIND (Hero bounces back in)
+    // Already handled by scrub — scrolling back up
+    // reverses the dive effect naturally!
+    // We add a small "snap" feel on return.
+    // ============================================
+
+    // Section title animations with "stepped" retro feel
+    gsap.utils.toArray('.gsap-section-title').forEach((el: any) => {
+      gsap.from(el, {
+        scrollTrigger: {
+          trigger: el,
+          start: "top 90%",
+          toggleActions: "play none none reverse",
+        },
+        x: -60,
+        opacity: 0,
+        duration: 0.6,
+        ease: "steps(8)",
+      });
+    });
+
+    // ============================================
+    // EXISTING: RPG Bouncy Pop-in elements
+    // ============================================
     gsap.utils.toArray('.gsap-pop').forEach((el: any) => {
       gsap.from(el, {
         scrollTrigger: {
@@ -40,7 +197,7 @@ export default function Home() {
       });
     });
 
-    // 2. Staggered Pop-in for Skills
+    // Staggered Pop-in for Skills
     if (document.querySelector('.gsap-skill-card')) {
       gsap.from('.gsap-skill-card', {
         scrollTrigger: {
@@ -57,7 +214,7 @@ export default function Home() {
       });
     }
 
-    // 3. Parallax Effect Option
+    // Parallax Effect Option
     gsap.utils.toArray('.gsap-parallax').forEach((el: any) => {
       const speed = parseFloat(el.getAttribute('data-speed') || "0.2");
       gsap.to(el, {
@@ -97,15 +254,19 @@ export default function Home() {
 
   return (
     <main style={{ position: 'relative' }} ref={container}>
-      {/* 3D Background — theme-aware */}
-      <PixelForest theme={theme} />
+      {/* 3D Background — theme-aware, receives mouse for parallax */}
+      <PixelForest theme={theme} mousePosRef={mousePosRef} />
 
       {/* Scrollable Content Layers */}
       <div style={{ position: 'relative', zIndex: 10 }}>
 
         {/* Section 1: Hero */}
-        <section style={{ height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-          <div className="hero-box" style={{ margin: '0 1rem' }}>
+        <section
+          ref={heroSectionRef}
+          onMouseMove={handleMouseMove}
+          style={{ height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}
+        >
+          <div ref={heroBoxRef} className="hero-box hero-box-parallax" style={{ margin: '0 1rem', willChange: 'transform, opacity, filter' }}>
             <div className="wave-text-wrapper">
               <h1 className="hero-title" style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {"FERDY AGUSTIAN".split(' ').map((word, wIdx) => (
@@ -119,19 +280,19 @@ export default function Home() {
                 ))}
               </h1>
             </div>
-            <p className="vt323-font hero-subtitle">
+            <p ref={subtitleRef} className="vt323-font hero-subtitle">
               AI Enthusiast &nbsp;|&nbsp; CS UnderGraduate Student
             </p>
           </div>
 
-          <div style={{
+          <div ref={arrowRef} className="hero-scroll-arrow" style={{
             marginTop: '3rem',
-            animation: 'bounce 2s infinite',
             fontSize: '2rem',
             color: 'var(--color-cream)',
-            textShadow: '2px 2px 0px var(--color-black)'
+            textShadow: '2px 2px 0px var(--color-black)',
+            willChange: 'transform, opacity',
           }}>
-            ▼
+            <span style={{ display: 'inline-block', animation: 'bounce 2s infinite' }}>▼</span>
           </div>
         </section>
 
@@ -170,7 +331,7 @@ export default function Home() {
 
         {/* Section 3: Skills (The Workshop) */}
         <section id="skills" style={{ minHeight: '100vh', padding: '100px 5%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <div className="gsap-parallax" data-speed="0.8" style={{ textAlign: 'center', marginBottom: '3rem' }}>
+          <div className="gsap-parallax gsap-section-title" data-speed="0.8" style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <h2 className="pixel-font" style={{ fontSize: '2rem', color: 'var(--color-cream)', textShadow: '4px 4px 0px var(--color-black)' }}>
               WORKSHOP // SKILLS
             </h2>

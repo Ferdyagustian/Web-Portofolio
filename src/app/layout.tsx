@@ -63,6 +63,8 @@ const vt323 = VT323({
 import PixelCursor from '../components/ui/PixelCursor';
 import Navbar from '../components/layout/Navbar';
 import TimeThemeProvider from '../providers/TimeThemeProvider';
+import AudioProvider from '../providers/AudioProvider';
+import SettingsMenu from '../components/ui/SettingsMenu';
 
 export default function RootLayout({
   children,
@@ -73,14 +75,17 @@ export default function RootLayout({
     <html lang="id" style={{ scrollBehavior: 'smooth' }} className={`${sixtyfour.variable} ${pixelify.variable} ${vt323.variable}`}>
       <body>
         <TimeThemeProvider>
-          <div className="scanlines"></div>
-          <PixelCursor />
-          <Navbar />
-          <LenisProvider>
-            <GSAPProvider>
-              {children}
-            </GSAPProvider>
-          </LenisProvider>
+          <AudioProvider>
+            <div className="scanlines"></div>
+            <PixelCursor />
+            <Navbar />
+            <LenisProvider>
+              <GSAPProvider>
+                {children}
+              </GSAPProvider>
+            </LenisProvider>
+            <SettingsMenu />
+          </AudioProvider>
         </TimeThemeProvider>
       </body>
     </html>

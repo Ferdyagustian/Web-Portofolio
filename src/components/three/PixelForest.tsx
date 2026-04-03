@@ -1,17 +1,12 @@
 "use client";
 
-import { useRef, useMemo, useEffect } from 'react';
+import React, { useRef, useMemo, useEffect, RefObject } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { PerspectiveCamera, Instance, Instances } from '@react-three/drei';
 import { EffectComposer, Pixelation } from '@react-three/postprocessing';
 import * as THREE from 'three';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useGSAP } from '@gsap/react';
 import { TimeTheme } from '../../lib/useTimeTheme';
-import { THEME_CONFIGS, ThemeConfig } from '../../lib/themeConfig';
-
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+import { THEME_CONFIGS } from '../../lib/themeConfig';
 
 const LERP_SPEED = 0.008; // ~2 seconds for full transition at 60fps
 
@@ -23,9 +18,11 @@ function SkyDome({ children }: { children: React.ReactNode }) {
 
   useFrame((state) => {
     if (groupRef.current) {
-      // Get exact absolute camera position so sky and sun always stay perfectly far away
+      // Get exact absolute camera position
       state.camera.getWorldPosition(v);
-      groupRef.current.position.z = v.z;
+      // Agar tidak terasa "mengikuti/nempel" di layar, kita berikan sedikit pelepas parallax
+      // sehingga saat user maju, bulan di kejauhan akan terasa tertinggal di kedalaman 3D.
+      groupRef.current.position.z = v.z * 0.85;
     }
   });
 
@@ -148,7 +145,7 @@ function CelestialBody({ theme }: { theme: TimeTheme }) {
   const currentSize = useRef(THEME_CONFIGS[theme].celestialCoreSize);
 
   // Material & Group refs
-  const coreMat = useRef<THREE.MeshBasicMaterial>(null);
+  const coreMaterial = useMemo(() => new THREE.MeshBasicMaterial({ fog: false }), []);
   const innerMat = useRef<THREE.MeshBasicMaterial>(null);
   const outerMat = useRef<THREE.MeshBasicMaterial>(null);
   const hazeMat = useRef<THREE.MeshBasicMaterial>(null);
@@ -180,15 +177,21 @@ function CelestialBody({ theme }: { theme: TimeTheme }) {
     currentSize.current = lerpNum(currentSize.current, cfg.celestialCoreSize, LERP_SPEED);
 
     // Apply to materials
-    if (coreMat.current) coreMat.current.color.copy(coreColor.current);
+    coreMaterial.color.copy(coreColor.current);
     if (innerMat.current) innerMat.current.color.copy(innerColor.current);
     if (outerMat.current) outerMat.current.color.copy(outerColor.current);
     if (hazeMat.current) hazeMat.current.color.copy(hazeColor.current);
 
-    // Gentle pulse
-    const pulse = cfg.celestialType === 'moon' ? 1.0 : (1 + Math.sin(state.clock.elapsedTime * 0.6) * 0.03);
+    // Dibuat "bersifat tetap" seperti instruksi (tidak berdenyut)
     const s = currentSize.current / 3; // Normalize to base scale
-    groupRef.current.scale.set(pulse * s, pulse * s, pulse * s);
+    groupRef.current.scale.set(s, s, s);
+
+    // Bulan terkunci diam di posisinya
+    if (cfg.celestialType === 'moon') {
+      groupRef.current.rotation.z = Math.PI / 4; // Kemiringan sabit statis
+    } else {
+      groupRef.current.rotation.z = 0;
+    }
 
     // Transition rays and craters
     const targetMult = cfg.celestialType === 'sun' ? 1 : 0;
@@ -213,40 +216,35 @@ function CelestialBody({ theme }: { theme: TimeTheme }) {
   return (
     <group ref={groupRef} position={THEME_CONFIGS[theme].celestialPosition}>
       {/* Core */}
-      <mesh>
-        <boxGeometry args={[3, 3, 0.5]} />
-        <meshBasicMaterial ref={coreMat} color={THEME_CONFIGS[theme].celestialCoreColor} />
-      </mesh>
+      {THEME_CONFIGS[theme].celestialType === 'moon' ? (
+        /* Smooth, elegant Crescent Moon */
+        <mesh material={coreMaterial}>
+          {/* args: innerRadius, outerRadius, thetaSegments, phiSegments, thetaStart, thetaLength */}
+          <ringGeometry args={[1.5, 2.5, 32, 1, 0, Math.PI * 1.3]} />
+        </mesh>
+      ) : (
+        /* Voxel Sun & Craters (disabled for moon) */
+        <>
+          <mesh material={coreMaterial}>
+            <boxGeometry args={[3, 3, 0.5]} />
+          </mesh>
+        </>
+      )}
 
-      {/* Moon Craters (visible only when moon) */}
-      <group ref={cratersGroup} position={[0, 0, 0.26]}>
-        <mesh position={[0.5, 0.5, 0]}>
-          <boxGeometry args={[0.6, 0.6, 0.1]} />
-          <meshBasicMaterial color="#7080a0" transparent opacity={0} />
-        </mesh>
-        <mesh position={[-0.6, -0.4, 0]}>
-          <boxGeometry args={[0.8, 0.8, 0.1]} />
-          <meshBasicMaterial color="#7080a0" transparent opacity={0} />
-        </mesh>
-        <mesh position={[0.2, -0.8, 0]}>
-          <boxGeometry args={[0.4, 0.4, 0.1]} />
-          <meshBasicMaterial color="#7080a0" transparent opacity={0} />
-        </mesh>
-      </group>
       {/* Inner glow */}
       <mesh>
-        <boxGeometry args={[5, 5, 0.3]} />
-        <meshBasicMaterial ref={innerMat} color={THEME_CONFIGS[theme].celestialInnerGlow} transparent opacity={0.65} />
+        {THEME_CONFIGS[theme].celestialType === 'moon' ? <circleGeometry args={[4, 32]} /> : <boxGeometry args={[5, 5, 0.3]} />}
+        <meshBasicMaterial ref={innerMat} color={THEME_CONFIGS[theme].celestialInnerGlow} transparent opacity={0.65} fog={false} />
       </mesh>
       {/* Outer glow */}
       <mesh>
-        <boxGeometry args={[7, 7, 0.2]} />
-        <meshBasicMaterial ref={outerMat} color={THEME_CONFIGS[theme].celestialOuterGlow} transparent opacity={0.3} />
+        {THEME_CONFIGS[theme].celestialType === 'moon' ? <circleGeometry args={[6, 32]} /> : <boxGeometry args={[7, 7, 0.2]} />}
+        <meshBasicMaterial ref={outerMat} color={THEME_CONFIGS[theme].celestialOuterGlow} transparent opacity={0.3} fog={false} />
       </mesh>
       {/* Haze */}
       <mesh>
-        <boxGeometry args={[10, 10, 0.1]} />
-        <meshBasicMaterial ref={hazeMat} color={THEME_CONFIGS[theme].celestialHaze} transparent opacity={0.1} />
+        {THEME_CONFIGS[theme].celestialType === 'moon' ? <circleGeometry args={[9, 32]} /> : <boxGeometry args={[10, 10, 0.1]} />}
+        <meshBasicMaterial ref={hazeMat} color={THEME_CONFIGS[theme].celestialHaze} transparent opacity={0.1} fog={false} />
       </mesh>
 
       {/* Pixel rays — 8 directions (visible only when sun) */}
@@ -285,56 +283,6 @@ function CelestialBody({ theme }: { theme: TimeTheme }) {
         </mesh>
       </group>
     </group>
-  );
-}
-
-/* ===== Stars (only for malam) ===== */
-function Stars({ theme }: { theme: TimeTheme }) {
-  const particles = useRef<THREE.Points>(null);
-  const opacityRef = useRef(THEME_CONFIGS[theme].showStars ? 1 : 0);
-  const configRef = useRef(THEME_CONFIGS[theme]);
-  const count = 100; // Reduced from 200 for better performance
-
-  useEffect(() => {
-    configRef.current = THEME_CONFIGS[theme];
-  }, [theme]);
-
-  const positions = useMemo(() => {
-    const arr = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      arr[i * 3] = (Math.random() - 0.5) * 100;
-      arr[i * 3 + 1] = 5 + Math.random() * 25;
-      arr[i * 3 + 2] = -40 - Math.random() * 50;
-    }
-    return arr;
-  }, [count]);
-
-  useFrame((state) => {
-    if (!particles.current) return;
-    const target = configRef.current.showStars ? 0.8 : 0;
-    opacityRef.current = lerpNum(opacityRef.current, target, LERP_SPEED);
-
-    const mat = particles.current.material as THREE.PointsMaterial;
-    mat.opacity = opacityRef.current;
-
-    // Twinkle (skip math if hidden to save performance)
-    if (opacityRef.current > 0.01) {
-      const posAttr = particles.current.geometry.attributes.position;
-      for (let i = 0; i < count; i++) {
-        const baseY = positions[i * 3 + 1];
-        posAttr.setY(i, baseY + Math.sin(state.clock.elapsedTime * 1.5 + i * 0.7) * 0.05);
-      }
-      posAttr.needsUpdate = true;
-    }
-  });
-
-  return (
-    <points ref={particles}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-      </bufferGeometry>
-      <pointsMaterial size={0.15} color="#e8e8ff" transparent opacity={opacityRef.current} />
-    </points>
   );
 }
 
@@ -510,23 +458,49 @@ function Trees({ theme }: { theme: TimeTheme }) {
   );
 }
 
-function CameraRig() {
+function CameraRig({ mousePosRef }: { mousePosRef: React.RefObject<{ x: number; y: number }> }) {
   const cameraGroup = useRef<THREE.Group>(null);
+  const scrollProgress = useRef(0);
 
-  useGSAP(() => {
-    if (!cameraGroup.current) return;
-    gsap.to(cameraGroup.current.position, {
-      z: -40,
-      ease: "none",
-      scrollTrigger: { trigger: "body", start: "top top", end: "bottom bottom", scrub: 1 }
-    });
+  useEffect(() => {
+    const handleScroll = () => {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      scrollProgress.current = maxScroll > 0 ? window.scrollY / maxScroll : 0;
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useFrame((state) => {
-    if (cameraGroup.current) {
-      cameraGroup.current.rotation.y = THREE.MathUtils.lerp(cameraGroup.current.rotation.y, (state.pointer.x * Math.PI) / 8, 0.05);
-      cameraGroup.current.rotation.x = THREE.MathUtils.lerp(cameraGroup.current.rotation.x, (-state.pointer.y * Math.PI) / 16, 0.05);
-    }
+  useFrame(() => {
+    if (!cameraGroup.current) return;
+
+    // Read the ref's current value (updated without re-renders)
+    const mp = mousePosRef.current ?? { x: 0, y: 0 };
+
+    // Scroll: move camera forward along Z
+    const targetZ = 5 - scrollProgress.current * 40;
+    cameraGroup.current.position.z = THREE.MathUtils.lerp(
+      cameraGroup.current.position.z, targetZ, 0.05
+    );
+
+    // Mouse parallax — very tight limits
+    const targetRotY = mp.x * 0.24;
+    const targetRotX = -mp.y * 0.225;
+    const targetPosX = mp.x * 0.4;
+    const targetPosY = 2 + mp.y * 0.25;
+
+    cameraGroup.current.rotation.y = THREE.MathUtils.lerp(
+      cameraGroup.current.rotation.y, targetRotY, 0.04
+    );
+    cameraGroup.current.rotation.x = THREE.MathUtils.lerp(
+      cameraGroup.current.rotation.x, targetRotX, 0.04
+    );
+    cameraGroup.current.position.x = THREE.MathUtils.lerp(
+      cameraGroup.current.position.x, targetPosX, 0.03
+    );
+    cameraGroup.current.position.y = THREE.MathUtils.lerp(
+      cameraGroup.current.position.y, targetPosY, 0.03
+    );
   });
 
   return (
@@ -537,78 +511,108 @@ function CameraRig() {
 }
 
 function Fireflies({ theme }: { theme: TimeTheme }) {
-  const count = 85;
-  const particles = useRef<THREE.Points>(null);
+  const count = 50;
+  const meshRef = useRef<THREE.InstancedMesh>(null);
+  const matRef = useRef<THREE.MeshBasicMaterial>(null);
+  const dummy = useMemo(() => new THREE.Object3D(), []);
   const configRef = useRef(THEME_CONFIGS[theme]);
+
+  // Fixed golden-yellow color — never changes across themes
+  const FIREFLY_COLOR = '#ffea70';
 
   useEffect(() => { configRef.current = THEME_CONFIGS[theme]; }, [theme]);
 
-  const positions = useMemo(() => {
-    const arr = new Float32Array(count * 3);
+  const particles = useMemo(() => {
+    const temp = [];
     for (let i = 0; i < count; i++) {
-      arr[i * 3] = (Math.random() - 0.5) * 40;
-      arr[i * 3 + 1] = Math.random() * 5;
-      arr[i * 3 + 2] = -Math.random() * 60;
+      temp.push({
+        x: (Math.random() - 0.5) * 40,
+        y: Math.random() * 5,
+        z: 5 - Math.random() * 65,
+        speedY: 0.005 + Math.random() * 0.015,
+        swaySpeed: 0.5 + Math.random() * 1.5,
+        swayRange: 0.5 + Math.random() * 1.5,
+      });
     }
-    return arr;
+    return temp;
   }, [count]);
 
   useFrame((state) => {
-    if (!particles.current) return;
+    if (!meshRef.current || !matRef.current) return;
     const cfg = configRef.current;
-    const mat = particles.current.material as THREE.PointsMaterial;
+    const targetOpacity = cfg.fireflyOpacity;
 
-    mat.opacity = lerpNum(mat.opacity, cfg.fireflyOpacity, LERP_SPEED);
-    mat.size = lerpNum(mat.size, cfg.fireflySize, LERP_SPEED);
-    lerpColor(mat.color, new THREE.Color(cfg.fireflyColor), LERP_SPEED);
+    // Always keep the color fixed yellow — no lerping
+    matRef.current.color.set(FIREFLY_COLOR);
 
-    if (mat.opacity > 0.01) {
-      // Swirling wind rotation
-      particles.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.05) * 0.1;
-      const posAttr = particles.current.geometry.attributes.position;
-      for (let i = 0; i < count; i++) {
-        // Natural wind movement (Drifting along X and Z, floating on Y)
-        const t = state.clock.elapsedTime;
-        const windX = Math.sin(t * 0.2 + i * 0.3) * 2.5 + Math.sin(t * 0.1 + i) * 1.5;
-        const floatY = Math.sin(t * 0.5 + i) * 0.5;
-        const windZ = Math.cos(t * 0.2 + i * 0.4) * 2.0;
+    // Lerp opacity toward target
+    matRef.current.opacity = lerpNum(matRef.current.opacity, targetOpacity, LERP_SPEED * 3);
 
-        posAttr.setX(i, positions[i * 3 + 0] + windX);
-        posAttr.setY(i, positions[i * 3 + 1] + floatY);
-        posAttr.setZ(i, positions[i * 3 + 2] + windZ);
+    // If target is 0, force-clamp to 0 (no breathing effect)
+    if (targetOpacity <= 0) {
+      matRef.current.opacity = Math.max(0, matRef.current.opacity - 0.01);
+      if (matRef.current.opacity < 0.01) {
+        matRef.current.opacity = 0;
       }
-      posAttr.needsUpdate = true;
+      return; // Skip all position updates — completely hidden
     }
+
+    // Breathing glow effect (only when visible)
+    matRef.current.opacity += Math.sin(state.clock.elapsedTime * 2) * 0.05;
+    matRef.current.opacity = Math.max(0, matRef.current.opacity);
+
+    const t = state.clock.elapsedTime;
+    particles.forEach((p, i) => {
+      p.y += p.speedY;
+      if (p.y > 8) {
+        p.y = -1;
+        p.x = (Math.random() - 0.5) * 40;
+        p.z = 5 - Math.random() * 65;
+      }
+      const moveX = Math.sin(t * p.swaySpeed + i) * p.swayRange;
+      const moveZ = Math.cos(t * p.swaySpeed * 0.8 + i) * (p.swayRange * 0.5);
+      dummy.position.set(p.x + moveX, p.y, p.z + moveZ);
+      dummy.rotation.set(t * p.swaySpeed, t * p.swaySpeed * 1.2, 0);
+      dummy.updateMatrix();
+      meshRef.current?.setMatrixAt(i, dummy.matrix);
+    });
+    meshRef.current.instanceMatrix.needsUpdate = true;
   });
 
-  const cfg = THEME_CONFIGS[theme];
   return (
-    <points ref={particles}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-      </bufferGeometry>
-      <pointsMaterial size={cfg.fireflySize} color={cfg.fireflyColor} transparent opacity={cfg.fireflyOpacity} depthWrite={false} blending={THREE.AdditiveBlending} />
-    </points>
+    <instancedMesh ref={meshRef} args={[undefined, undefined, count]}>
+      <boxGeometry args={[0.15, 0.15, 0.15]} />
+      <meshBasicMaterial
+        ref={matRef}
+        color={FIREFLY_COLOR}
+        transparent
+        opacity={0}
+        fog={false}
+      />
+    </instancedMesh>
   );
 }
 
 function GroundBushes({ theme }: { theme: TimeTheme }) {
-  const count = 50; // Reduced from 100
+  const count = 50;
   const matRef = useRef<THREE.MeshStandardMaterial>(null);
   const configRef = useRef(THEME_CONFIGS[theme]);
 
   useEffect(() => { configRef.current = THEME_CONFIGS[theme]; }, [theme]);
 
-  const positions = useMemo(() => {
-    const pos = [];
+  // Bake BOTH position AND rotation into the memoized array
+  // so re-renders never regenerate random values
+  const bushData = useMemo(() => {
+    const data = [];
     for (let i = 0; i < count; i++) {
       const side = Math.random() > 0.5 ? 1 : -1;
       const x = side * (2.5 + Math.random() * 5);
       const z = -Math.random() * 60;
       const scale = 0.4 + Math.random() * 1.2;
-      pos.push({ x, z, scale });
+      const rotY = Math.random() * Math.PI; // baked rotation
+      data.push({ x, z, scale, rotY });
     }
-    return pos;
+    return data;
   }, []);
 
   useFrame(() => {
@@ -619,8 +623,8 @@ function GroundBushes({ theme }: { theme: TimeTheme }) {
     <Instances limit={count} range={count}>
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial ref={matRef} color={THEME_CONFIGS[theme].bushColor} />
-      {positions.map((p, i) => (
-        <Instance key={`bush-${i}`} position={[p.x, p.scale / 2, p.z]} scale={[p.scale, p.scale, p.scale]} rotation={[0, Math.random() * Math.PI, 0]} />
+      {bushData.map((p, i) => (
+        <Instance key={`bush-${i}`} position={[p.x, p.scale / 2, p.z]} scale={[p.scale, p.scale, p.scale]} rotation={[0, p.rotY, 0]} />
       ))}
     </Instances>
   );
@@ -629,7 +633,7 @@ function GroundBushes({ theme }: { theme: TimeTheme }) {
 function FallingLeaves({ theme }: { theme: TimeTheme }) {
   const count = 100; // Reduced from 150
   const meshRef = useRef<THREE.InstancedMesh>(null);
-  const matRef = useRef<THREE.MeshStandardMaterial>(null);
+  const matRef = useRef<THREE.MeshLambertMaterial>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const configRef = useRef(THEME_CONFIGS[theme]);
 
@@ -676,7 +680,8 @@ function FallingLeaves({ theme }: { theme: TimeTheme }) {
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, count]}>
       <planeGeometry args={[0.25, 0.25]} />
-      <meshStandardMaterial ref={matRef} color={cfg.leafParticleColor} side={THREE.DoubleSide} transparent opacity={cfg.leafOpacity} />
+      {/* Menggunakan Lambert untuk mencegah pantulan silau (specular flashes) saat berputar terkena cahaya */}
+      <meshLambertMaterial ref={matRef} color={cfg.leafParticleColor} side={THREE.DoubleSide} transparent opacity={cfg.leafOpacity} />
     </instancedMesh>
   );
 }
@@ -698,7 +703,9 @@ function Ground({ theme }: { theme: TimeTheme }) {
 }
 
 /* ===== Main Export ===== */
-export default function PixelForest({ theme }: { theme: TimeTheme }) {
+export default function PixelForest({ theme, mousePosRef }: { theme: TimeTheme; mousePosRef?: React.RefObject<{ x: number; y: number }> }) {
+  const defaultRef = useRef({ x: 0, y: 0 });
+  const effectiveRef = mousePosRef ?? defaultRef;
   const cfg = THEME_CONFIGS[theme];
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: -1 }}>
@@ -706,7 +713,7 @@ export default function PixelForest({ theme }: { theme: TimeTheme }) {
         <color attach="background" args={[cfg.bgColor]} />
         <fog attach="fog" args={[cfg.fogColor, cfg.fogNear, cfg.fogFar]} />
 
-        <CameraRig />
+        <CameraRig mousePosRef={effectiveRef} />
         <SceneController theme={theme} />
 
         {/* Sky Elements — Locked to camera Z to simulate infinite distance */}
@@ -716,9 +723,6 @@ export default function PixelForest({ theme }: { theme: TimeTheme }) {
 
           {/* Celestial body (Sun/Moon) */}
           <CelestialBody theme={theme} />
-
-          {/* Stars (Night only) */}
-          <Stars theme={theme} />
         </SkyDome>
 
         {/* Clouds - Outside SkyDome so they exhibit parallax scrolling */}

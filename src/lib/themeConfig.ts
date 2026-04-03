@@ -88,7 +88,7 @@ const PAGI: ThemeConfig = {
   leafParticleColor: '#6dd892',
   leafOpacity: 0.6,
   fireflyColor: '#f0c55e',
-  fireflyOpacity: 0.3,
+  fireflyOpacity: 0,
   fireflySize: 0.08,
 
   cloudColors: ['#f8e8e0', '#ffd4d4', '#ffe8d0'],
@@ -134,7 +134,7 @@ const SIANG: ThemeConfig = {
   leafParticleColor: '#4ade80',
   leafOpacity: 0.5,
   fireflyColor: '#f0c55e',
-  fireflyOpacity: 0.1,
+  fireflyOpacity: 0,
   fireflySize: 0.06,
 
   cloudColors: ['#ffffff', '#f5f5f5', '#e8e8e8'],
@@ -180,7 +180,7 @@ const SORE: ThemeConfig = {
   leafParticleColor: '#e67e22',
   leafOpacity: 0.6,
   fireflyColor: '#f0c55e',
-  fireflyOpacity: 0.8,
+  fireflyOpacity: 0,
   fireflySize: 0.12,
 
   cloudColors: ['#c0392b', '#e74c3c', '#d35400'],
@@ -198,7 +198,7 @@ const MALAM: ThemeConfig = {
   skyBottom: '#1a3050',    // Dark teal horizon
 
   celestialType: 'moon',
-  celestialPosition: [-45, 30, -80], // At the far left edge, completely stationary
+  celestialPosition: [40, 30, -80],  // Top right corner, far away
   celestialCoreColor: '#ffffff',     // Extremely bright pure white moon
   celestialInnerGlow: '#ffffff',     // Pure white inner glow
   celestialOuterGlow: '#f0f4ff',     // Very pale white outer glow
@@ -231,7 +231,7 @@ const MALAM: ThemeConfig = {
 
   cloudColors: [],
   cloudOpacity: 0,
-  showStars: true,
+  showStars: false, // Removed stars as requested
 };
 
 export const THEME_CONFIGS: Record<TimeTheme, ThemeConfig> = {

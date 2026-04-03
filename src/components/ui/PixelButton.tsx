@@ -1,4 +1,5 @@
 import { ReactNode, ButtonHTMLAttributes, useState } from "react";
+import { useAudio } from "../../providers/AudioProvider";
 
 interface PixelButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
@@ -10,6 +11,14 @@ export default function PixelButton({ children, variant = "primary", className =
   const isPrimary = variant === "primary";
   const [isHovered, setIsHovered] = useState(false);
   const [isActive, setIsActive] = useState(false);
+  
+  let playSfx: (type: 'hover' | 'click' | 'option') => void = () => {};
+  try {
+    const audioCtx = useAudio();
+    playSfx = audioCtx.playSfx;
+  } catch {
+    // continue
+  }
   
   // Calculate dynamic effects
   const baseShadow = '4px 4px 0px 0px rgba(0,0,0,0.5)';
@@ -42,6 +51,7 @@ export default function PixelButton({ children, variant = "primary", className =
       }}
       onMouseEnter={(e) => {
         setIsHovered(true);
+        playSfx('hover');
         if (props.onMouseEnter) props.onMouseEnter(e);
       }}
       onMouseLeave={(e) => {
@@ -51,6 +61,7 @@ export default function PixelButton({ children, variant = "primary", className =
       }}
       onMouseDown={(e) => {
         setIsActive(true);
+        playSfx('click');
         if (props.onMouseDown) props.onMouseDown(e);
       }}
       onMouseUp={(e) => {

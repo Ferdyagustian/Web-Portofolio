@@ -20,15 +20,16 @@ export default function InteractiveAvatar() {
         className="about-avatar-interactive"
         onClick={() => setIs3DModalOpen(true)}
         style={{
-          width: '140px', height: '140px', flexShrink: 0,
+          width: '140px', flexShrink: 0,
           backgroundColor: 'var(--color-moss-green)',
           border: '4px solid var(--color-forest-dark)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column',
           boxShadow: '4px 4px 0px rgba(0,0,0,0.5)',
           overflow: 'hidden',
           cursor: 'pointer',
           transition: 'transform 0.2s ease, box-shadow 0.2s ease',
           zIndex: 2,
+          position: 'relative',
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.animation = 'scaredShake 0.3s infinite';
@@ -44,10 +45,30 @@ export default function InteractiveAvatar() {
           src="/pixel_avatar_profile.png" 
           width={140} 
           height={140} 
-          style={{ imageRendering: 'pixelated', objectFit: 'cover' }} 
+          style={{ imageRendering: 'pixelated', objectFit: 'cover', display: 'block' }} 
           alt="Ferdy Agustian" 
           priority
         />
+        {/* Gacha click label */}
+        <div style={{
+          width: '100%',
+          background: 'rgba(0,0,0,0.75)',
+          borderTop: '2px solid var(--color-moss-green)',
+          textAlign: 'center',
+          padding: '4px 2px',
+          flexShrink: 0,
+        }}>
+          <span style={{
+            fontFamily: 'var(--font-pixelify), monospace',
+            fontSize: '0.48rem',
+            color: '#7dffb3',
+            letterSpacing: '0.05em',
+            textShadow: '0 0 6px #4ade80',
+            animation: 'gachaBlinkPulse 1.4s ease-in-out infinite',
+            display: 'inline-block',
+            whiteSpace: 'nowrap',
+          }}>✦ KLIK UNTUK GACHA ✦</span>
+        </div>
       </div>
 
       {is3DModalOpen && mounted && createPortal(
@@ -107,6 +128,10 @@ export default function InteractiveAvatar() {
           80% { transform: translateY(-4px) scale(1.05) translate(-1px, -1px) rotate(2deg); }
           90% { transform: translateY(-4px) scale(1.05) translate(1px, 2px) rotate(0deg); }
           100% { transform: translateY(-4px) scale(1.05) translate(1px, -2px) rotate(-2deg); }
+        }
+        @keyframes gachaBlinkPulse {
+          0%, 100% { opacity: 1; text-shadow: 0 0 6px #4ade80, 0 0 12px #4ade80; }
+          50%       { opacity: 0.45; text-shadow: 0 0 2px #4ade80; }
         }
       `}} />
     </>
