@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-// Initialize Resend
-// Note: You need to add RESEND_API_KEY to your .env.local file
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Resend akan diinisiasi di dalam fungsi POST agar tidak error saat proses build di Vercel
 
 export async function POST(request: Request) {
   try {
@@ -46,6 +44,8 @@ export async function POST(request: Request) {
     }
 
     console.log(`Attempting to send email via Resend for: ${name} (${email})`);
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
     const { data: resendData, error: resendError } = await resend.emails.send({
       from: 'onboarding@resend.dev', // Resend requires exactly this for unverified domains
