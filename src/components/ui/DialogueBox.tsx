@@ -2,45 +2,27 @@ import { ReactNode } from "react";
 
 export default function DialogueBox({ children, title, className = "", style }: { children: ReactNode, title?: string, className?: string, style?: React.CSSProperties }) {
   return (
-    <div className={`pixel-corners ${className}`} style={{
+    <div className={className} style={{
       position: 'relative',
-      backgroundColor: 'var(--color-cream)',
-      border: '4px solid var(--color-moss-green)',
-      color: 'var(--color-black)',
-      boxShadow: '8px 8px 0px 0px rgba(0,0,0,0.5)',
+      color: 'var(--color-cream)',
+      textShadow: '2px 2px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000',
       imageRendering: 'pixelated',
       maxWidth: '800px',
-      margin: '0 auto'
+      margin: '0 auto',
+      ...style
     }}>
-      {/* Wooden corner decorations could go here */}
-      <div style={{
-        position: 'absolute', top: -4, left: -4, width: 8, height: 8, backgroundColor: 'var(--color-forest-dark)'
-      }} />
-      <div style={{
-        position: 'absolute', top: -4, right: -4, width: 8, height: 8, backgroundColor: 'var(--color-forest-dark)'
-      }} />
-      <div style={{
-        position: 'absolute', bottom: -4, left: -4, width: 8, height: 8, backgroundColor: 'var(--color-forest-dark)'
-      }} />
-      <div style={{
-        position: 'absolute', bottom: -4, right: -4, width: 8, height: 8, backgroundColor: 'var(--color-forest-dark)'
-      }} />
-
       {title && (
-        <div style={{
-          position: 'absolute',
-          top: '-20px',
-          left: '20px',
-          backgroundColor: 'var(--color-forest-dark)',
+        <h3 className="pixel-font" style={{
+          fontSize: '1.2rem',
           color: 'var(--color-cream)',
-          padding: '4px 12px',
-          border: '2px solid var(--color-moss-green)',
-          fontFamily: "var(--font-sixtyfour), cursive",
-          fontSize: '0.75rem',
-          boxShadow: '4px 4px 0px 0px rgba(0,0,0,0.5)',
+          textShadow: '3px 3px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000',
+          marginBottom: '1.5rem',
+          borderBottom: '4px dashed rgba(255,255,255,0.2)',
+          paddingBottom: '0.5rem',
+          display: 'inline-block'
         }}>
           {title}
-        </div>
+        </h3>
       )}
 
       <div className="pixelify-font" style={{ fontSize: '1.1rem', lineHeight: '1.6' }}>

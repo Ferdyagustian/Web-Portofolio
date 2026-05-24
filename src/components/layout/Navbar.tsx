@@ -4,6 +4,8 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { gsap } from "gsap";
 import { useAudio } from "../../providers/AudioProvider";
 
+import { useLenis } from 'lenis/react';
+
 const NAV_LINKS = [
   { name: 'ABOUT', href: '#about' },
   { name: 'SKILLS', href: '#skills' },
@@ -14,6 +16,7 @@ const NAV_LINKS = [
 function NavLink({ name, href }: { name: string; href: string }) {
   const linkRef = useRef<HTMLAnchorElement>(null);
   const arrowRef = useRef<HTMLSpanElement>(null);
+  const lenis = useLenis();
 
   let playSfx: (type: 'hover' | 'click' | 'option') => void = () => { };
   try { playSfx = useAudio().playSfx; } catch { /* outside provider */ }
@@ -64,16 +67,27 @@ function NavLink({ name, href }: { name: string; href: string }) {
     });
   }, []);
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    playSfx('click');
+    if (lenis) {
+      lenis.scrollTo(href, { offset: 0, duration: 1.5, lock: false });
+    } else {
+      document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
-      onClick={() => playSfx('click')}
+      onClick={handleClick}
       style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}
     >
       <a
         ref={linkRef}
         href={href}
+        onClick={(e) => e.preventDefault()}
         className="pixel-font nav-link-gsap"
         style={{
           textDecoration: 'none',

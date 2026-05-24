@@ -115,9 +115,9 @@ const SIANG: ThemeConfig = {
   celestialCoreSize: 5,
 
   ambientColor: '#e8f4f8',
-  ambientIntensity: 0.7,
+  ambientIntensity: 0.55,
   mainLightColor: '#FFFFFF',
-  mainLightIntensity: 1.4,
+  mainLightIntensity: 1.15,
   mainLightPosition: [0, 16, -30],
   fillLightColor: '#87ceeb',
   fillLightIntensity: 0.3,
@@ -214,7 +214,7 @@ const MALAM: ThemeConfig = {
   fillLightColor: '#223355',
   fillLightIntensity: 0.4,
 
-  fogColor: '#060818',
+  fogColor: '#2C4250',
   fogNear: 5,
   fogFar: 45,
 

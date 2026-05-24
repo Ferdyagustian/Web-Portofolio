@@ -204,7 +204,7 @@ export default function ProjectMap({ projects }: ProjectMapProps) {
       ref={containerRef}
       style={{
         width: "100%",
-        height: "80vh",
+        height: "100%",
         overflow: "hidden",
         position: "relative",
         touchAction: "none",

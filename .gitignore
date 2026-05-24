@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Editor and AI Agents
+.vscode/
+.cursor/
+.gemini/
+.ai/

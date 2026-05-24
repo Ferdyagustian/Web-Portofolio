@@ -22,146 +22,77 @@ export default function Home() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const theme = useTheme();
   const container = useRef<HTMLDivElement>(null);
-  const heroBoxRef = useRef<HTMLDivElement>(null);
   const heroSectionRef = useRef<HTMLElement>(null);
-  const subtitleRef = useRef<HTMLParagraphElement>(null);
-  const arrowRef = useRef<HTMLDivElement>(null);
 
   // Mouse parallax ref — useRef instead of useState to prevent re-renders!
   // Re-renders were causing GroundBushes inline Math.random() to regenerate = spinning bushes
   const mousePosRef = useRef({ x: 0, y: 0 });
-  const quickX = useRef<gsap.QuickToFunc | null>(null);
-  const quickY = useRef<gsap.QuickToFunc | null>(null);
-  const quickRotX = useRef<gsap.QuickToFunc | null>(null);
-  const quickRotY = useRef<gsap.QuickToFunc | null>(null);
 
-  // Setup gsap.quickTo for hero-box mouse parallax
+  const [showGyroButton, setShowGyroButton] = useState(false);
+
+  // Setup window mousemove & deviceorientation for 3D CameraRig parallax tilt
   useEffect(() => {
-    if (!heroBoxRef.current) return;
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    if (isMobile) return;
+    // 1. Mouse move parallax (Desktop)
+    const handleMouseMove = (e: MouseEvent) => {
+      const { clientX, clientY } = e;
+      const { innerWidth, innerHeight } = window;
+      const nx = (clientX / innerWidth - 0.5) * 2;
+      const ny = (clientY / innerHeight - 0.5) * 2;
+      mousePosRef.current = { x: nx * 0.3, y: ny * 0.3 };
+    };
 
-    quickX.current = gsap.quickTo(heroBoxRef.current, "x", { duration: 0.6, ease: "power3.out" });
-    quickY.current = gsap.quickTo(heroBoxRef.current, "y", { duration: 0.6, ease: "power3.out" });
-    quickRotX.current = gsap.quickTo(heroBoxRef.current, "rotateX", { duration: 0.8, ease: "power3.out" });
-    quickRotY.current = gsap.quickTo(heroBoxRef.current, "rotateY", { duration: 0.8, ease: "power3.out" });
+    // 2. Gyroscope parallax (Mobile)
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      let gamma = e.gamma || 0; // Left/Right (-90 to 90)
+      let beta = e.beta || 0;   // Front/Back (-180 to 180)
+      
+      // Clamp values for comfortable phone holding
+      gamma = Math.max(-45, Math.min(45, gamma));
+      beta = Math.max(0, Math.min(90, beta)) - 45; // Center around 45 degrees holding angle
 
-    // Set perspective on parent for 3D tilt
-    if (heroBoxRef.current.parentElement) {
-      heroBoxRef.current.parentElement.style.perspective = "800px";
+      // Normalize to -1 to 1 range (matching mouse parallax)
+      const nx = gamma / 45;
+      const ny = beta / 45;
+
+      mousePosRef.current = { x: nx * 0.3, y: ny * 0.3 };
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+
+    // Check if iOS 13+ device orientation permission is required
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+      setShowGyroButton(true);
+    } else {
+      // Android / Older iOS / Desktop
+      window.addEventListener('deviceorientation', handleOrientation);
     }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('deviceorientation', handleOrientation);
+    };
   }, []);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    if (isMobile) return;
-
-    const { clientX, clientY } = e;
-    const { innerWidth, innerHeight } = window;
-    // Normalize to -1 to 1 — clamped to subtle range
-    const nx = (clientX / innerWidth - 0.5) * 2;
-    const ny = (clientY / innerHeight - 0.5) * 2;
-
-    // Update ref (no re-render!) — CameraRig reads this in useFrame
-    mousePosRef.current = { x: nx * 0.3, y: ny * 0.3 };
-
-    // Move hero-box very subtly — max ±8px horizontal, ±5px vertical
-    if (quickX.current) quickX.current(nx * 8);
-    if (quickY.current) quickY.current(ny * 5);
-    // 3D tilt — very subtle, max ±2 degrees
-    if (quickRotX.current) quickRotX.current(-ny * 2);
-    if (quickRotY.current) quickRotY.current(nx * 2);
-  }, []);
+  const requestGyroPermission = async () => {
+    try {
+      const permissionState = await (DeviceOrientationEvent as any).requestPermission();
+      if (permissionState === 'granted') {
+        const handleOrientation = (e: DeviceOrientationEvent) => {
+          let gamma = Math.max(-45, Math.min(45, e.gamma || 0));
+          let beta = Math.max(0, Math.min(90, e.beta || 0)) - 45;
+          mousePosRef.current = { x: (gamma / 45) * 0.3, y: (beta / 45) * 0.3 };
+        };
+        window.addEventListener('deviceorientation', handleOrientation);
+        setShowGyroButton(false);
+      }
+    } catch (err) {
+      console.error("Gyroscope permission error", err);
+    }
+  };
 
   useGSAP(() => {
     // ============================================
-    // HERO ENTRANCE TIMELINE (Staggered Bounce-In)
-    // Only animate visual children, NOT the outer hero-box itself
-    // So the scrub dive effect can control hero-box independently
-    // ============================================
-
-    const heroTL = gsap.timeline({ delay: 0.1 });
-
-    // Letters stagger wave in — clearProps removes inline styles
-    // so CSS .wave-letter:hover transitions work after animation
-    heroTL.from('.wave-letter', {
-      y: -40,
-      opacity: 0,
-      duration: 0.5,
-      stagger: 0.05,
-      ease: "back.out(2)",
-      clearProps: "all",
-    });
-
-    // Subtitle fades in
-    if (subtitleRef.current) {
-      heroTL.from(subtitleRef.current, {
-        y: 15,
-        opacity: 0,
-        duration: 0.5,
-        ease: "power2.out",
-      }, "-=0.2");
-    }
-
-    // Arrow bounces in
-    if (arrowRef.current) {
-      heroTL.from(arrowRef.current, {
-        scale: 0,
-        opacity: 0,
-        duration: 0.5,
-        ease: "back.out(3)",
-      }, "-=0.2");
-    }
-
-    // ============================================
-    // DIVE EFFECT — Controlled by scroll scrub
-    // fromTo with immediateRender:false so it doesn’t
-    // interfere with the entrance animation above
-    // ============================================
-    if (heroBoxRef.current) {
-      gsap.fromTo(heroBoxRef.current,
-        { scale: 1, opacity: 1, y: 0, filter: 'blur(0px)' },
-        {
-          scale: 1.6,
-          opacity: 0,
-          y: -60,
-          filter: 'blur(5px)',
-          ease: 'none',
-          immediateRender: false, // KEY: don’t apply start values immediately
-          scrollTrigger: {
-            trigger: heroSectionRef.current,
-            start: 'top top',
-            end: 'bottom top',
-            scrub: 0.8,
-          },
-        }
-      );
-    }
-
-    // Arrow fades independently
-    if (arrowRef.current) {
-      gsap.fromTo(arrowRef.current,
-        { opacity: 1, y: 0 },
-        {
-          opacity: 0,
-          y: 20,
-          ease: 'none',
-          immediateRender: false,
-          scrollTrigger: {
-            trigger: heroSectionRef.current,
-            start: '10% top',
-            end: '40% top',
-            scrub: 0.8,
-          },
-        }
-      );
-    }
-
-    // ============================================
-    // SCROLL-UP REWIND (Hero bounces back in)
-    // Already handled by scrub — scrolling back up
-    // reverses the dive effect naturally!
-    // We add a small "snap" feel on return.
+    // SCROLL-UP REWIND & triggers
     // ============================================
 
     // Section title animations with "stepped" retro feel
@@ -261,191 +192,24 @@ export default function Home() {
 
   return (
     <main style={{ position: 'relative' }} ref={container}>
-      {/* 3D Background — theme-aware, receives mouse for parallax */}
-      <PixelForest theme={theme} mousePosRef={mousePosRef} />
+      {/* 3D Background — theme-aware, receives mouse for parallax, now acts as the interactive scene wrapper */}
+      <PixelForest
+        theme={theme}
+        mousePosRef={mousePosRef}
+        formData={formData}
+        setFormData={setFormData}
+        status={status}
+        handleSubmit={handleSubmit}
+        errorMessage={errorMessage}
+      />
 
-      {/* Scrollable Content Layers */}
-      <div style={{ position: 'relative', zIndex: 10 }}>
-
-        {/* Section 1: Hero */}
-        <section
-          ref={heroSectionRef}
-          onMouseMove={handleMouseMove}
-          style={{ height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}
-        >
-          <div ref={heroBoxRef} className="hero-box hero-box-parallax" style={{ margin: '0 1rem', willChange: 'transform, opacity, filter' }}>
-            <div className="wave-text-wrapper">
-              <h1 className="hero-title" style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-                {"FERDY AGUSTIAN".split(' ').map((word, wIdx) => (
-                  <span key={wIdx} style={{ display: 'flex' }}>
-                    {word.split('').map((char, index) => (
-                      <span key={index} className="pixel-font wave-letter">
-                        {char}
-                      </span>
-                    ))}
-                  </span>
-                ))}
-              </h1>
-            </div>
-            <p ref={subtitleRef} className="vt323-font hero-subtitle">
-              AI Enthusiast &nbsp;|&nbsp; CS UnderGraduate Student
-            </p>
-          </div>
-
-          <div ref={arrowRef} className="hero-scroll-arrow" style={{
-            marginTop: '3rem',
-            fontSize: '2rem',
-            color: 'var(--color-cream)',
-            textShadow: '2px 2px 0px var(--color-black)',
-            willChange: 'transform, opacity',
-          }}>
-            <span style={{ display: 'inline-block', animation: 'bounce 2s infinite' }}>▼</span>
-          </div>
-        </section>
-
-        {/* Section 2: About (The Campfire) */}
-        <section id="about" style={{ minHeight: '100vh', padding: '100px 5%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="gsap-pop" style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
-            <DialogueBox title="Ferdy Agustian Prasetyo">
-              <div className="about-content">
-                {/* Pixel Art Avatar / Character Sprite (Interactive 3D) */}
-                <InteractiveAvatar />
-
-                <div style={{ flex: '1', minWidth: '250px' }}>
-                  <p style={{ marginBottom: '1rem' }}>
-                    <strong>Halo! (こんにちは!)</strong> Saya Ferdy Agustian Prasetyo, seorang mahasiswa semester akhir dari <strong>Universitas Gunadarma</strong>.
-                  </p>
-                  <p style={{ marginBottom: '1rem' }}>
-                    Saya memiliki ketertarikan yang mendalam terhadap <strong>Artificial Intelligence</strong> dan pengembangan perangkat lunak (Software Development). Saya senang menggabungkan logika dan kreativitas dalam membangun aplikasi yang menyenangkan dan bermanfaat. <br /><br />If there's an interesting project, let's collaborate! I will be more than glad to connect with you!
-                  </p>
-                  <div className="about-buttons" style={{ display: 'flex', gap: '1rem', marginTop: '2rem', flexWrap: 'wrap' }}>
-                    <a href="https://github.com/Ferdyagustian" target="_blank" rel="noreferrer">
-                      <PixelButton variant="secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span className="pixel-font" style={{ fontSize: '0.6rem' }}>[GH]</span> GitHub
-                      </PixelButton>
-                    </a>
-                    <a href="https://www.linkedin.com/in/ferdy-agustian-5a3521247/" target="_blank" rel="noreferrer">
-                      <PixelButton style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span className="pixel-font" style={{ fontSize: '0.6rem' }}>[IN]</span> LinkedIn
-                      </PixelButton>
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </DialogueBox>
-          </div>
-        </section>
-
-        {/* Section 3: Skills (The Workshop) */}
-        <section id="skills" style={{ minHeight: '100vh', padding: '100px 5%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <div className="gsap-parallax gsap-section-title" data-speed="0.8" style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <h2 className="pixel-font" style={{ fontSize: '2rem', color: 'var(--color-cream)', textShadow: '4px 4px 0px var(--color-black)' }}>
-              WORKSHOP // SKILLS
-            </h2>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem', maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
-            <div className="gsap-skill-card">
-              <PixelCard title="Frontend">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <ObservableSkill name="HTML/CSS/JS" rank="A" percentage={85} iconColor="#e34c26" />
-                  <ObservableSkill name="React / Next.js" rank="S" percentage={95} iconColor="#61dafb" />
-                  <ObservableSkill name="WebGL / Three.js" rank="B" percentage={70} iconColor="#88ce02" />
-                </div>
-              </PixelCard>
-            </div>
-
-            <div className="gsap-skill-card">
-              <PixelCard title="Backend">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <ObservableSkill name="Node.js" rank="S" percentage={90} iconColor="#339933" />
-                  <ObservableSkill name="Python" rank="A" percentage={80} iconColor="#3776ab" />
-                  <ObservableSkill name="Java" rank="B" percentage={75} iconColor="#5382a1" />
-                </div>
-              </PixelCard>
-            </div>
-
-            <div className="gsap-skill-card">
-              <PixelCard title="Database">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <ObservableSkill name="MySQL" rank="A" percentage={85} iconColor="#4479a1" />
-                  <ObservableSkill name="PostgreSQL" rank="A" percentage={80} iconColor="#336791" />
-                  <ObservableSkill name="MongoDB" rank="B" percentage={75} iconColor="#47a248" />
-                </div>
-              </PixelCard>
-            </div>
-
-            <div className="gsap-skill-card">
-              <PixelCard title="Tools & Others">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <ObservableSkill name="Git / GitHub" rank="S" percentage={90} iconColor="#f05032" />
-                  <ObservableSkill name="Docker" rank="B" percentage={70} iconColor="#2496ed" />
-                  <ObservableSkill name="Figma" rank="A" percentage={85} iconColor="#f24e1e" />
-                  <ObservableSkill name="AI / ML" rank="B" percentage={75} iconColor="#ffeb3b" />
-                </div>
-              </PixelCard>
-            </div>
-          </div>
-        </section>
-
-        {/* Section 4: Projects (Interactive Gallery - Sutera.ch Inspired) */}
-        <ProjectGallery />
-
-        {/* Section 5: Contact (Messenger Owl) */}
-        <section id="contact" style={{ padding: '100px 5% 50px 5%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div className="gsap-pop" style={{ width: '100%', maxWidth: '600px' }}>
-            <DialogueBox title="Send a Message" className="contact-box" style={{ width: '100%' }}>
-              <p style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
-                Im more to be happy when i can make a good things for other people , so if you have a good things for me , just send a message!
-              </p>
-              <form style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} onSubmit={handleSubmit}>
-                <div>
-                  <label className="pixel-font" style={{ fontSize: '0.7rem', color: 'var(--color-forest-dark)' }}>NAMA</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
-                    required
-                    style={{ width: '100%', padding: '0.8rem', border: '2px solid var(--color-black)', backgroundColor: '#fff', outline: 'none', fontFamily: "'VT323', monospace", fontSize: '1.2rem' }}
-                  />
-                </div>
-                <div>
-                  <label className="pixel-font" style={{ fontSize: '0.7rem', color: 'var(--color-forest-dark)' }}>EMAIL</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={e => setFormData(p => ({ ...p, email: e.target.value }))}
-                    required
-                    style={{ width: '100%', padding: '0.8rem', border: '2px solid var(--color-black)', backgroundColor: '#fff', outline: 'none', fontFamily: "'VT323', monospace", fontSize: '1.2rem' }}
-                  />
-                </div>
-                <div>
-                  <label className="pixel-font" style={{ fontSize: '0.7rem', color: 'var(--color-forest-dark)' }}>PESAN</label>
-                  <textarea
-                    rows={4}
-                    value={formData.message}
-                    onChange={e => setFormData(p => ({ ...p, message: e.target.value }))}
-                    required
-                    style={{ width: '100%', padding: '0.8rem', border: '2px solid var(--color-black)', backgroundColor: '#fff', outline: 'none', fontFamily: "'VT323', monospace", fontSize: '1.2rem', resize: 'vertical' }}
-                  />
-                </div>
-                <PixelButton type="submit" disabled={status === 'loading'} style={{ width: '100%', marginTop: '0.5rem', opacity: status === 'loading' ? 0.5 : 1 }}>
-                  {status === 'loading' ? 'SENDING...' : 'SEND MESSAGE'}
-                </PixelButton>
-                {status === 'success' && <p style={{ color: 'var(--color-moss-green)', fontSize: '1.2rem', textAlign: 'center', marginTop: '0.5rem', fontFamily: "'VT323', monospace" }}>Berhasil dikirim, terimakasih telah mengirim pesan! :D</p>}
-                {status === 'error' && <p style={{ color: 'red', fontSize: '0.9rem', textAlign: 'center', marginTop: '0.5rem', fontFamily: "'VT323', monospace" }}>Gagal: {errorMessage}</p>}
-              </form>
-            </DialogueBox>
-          </div>
-          <div style={{ marginTop: '4rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: 'var(--color-cream)' }} className="pixelify-font">
-            <span className="pixel-font" style={{ fontSize: '0.8rem' }}>[EMAIL]</span>
-            <span style={{ wordBreak: 'break-all', textAlign: 'center' }}>agustianprasetyoferdy@gmail.com</span>
-          </div>
-          <footer style={{ marginTop: '2rem', textAlign: 'center', color: 'var(--color-cream)', fontSize: '0.8rem' }} className="pixelify-font">
-            © {new Date().getFullYear()} Ferdy Agustian Prasetyo. Designed with ♥ and Pixel Art.
-          </footer>
-        </section>
-
+      {/* Invisible Scroll Triggers for Lenis and GSAP ScrollTrigger */}
+      <div style={{ position: 'relative', zIndex: 10, pointerEvents: 'none' }}>
+        <section id="hero" style={{ height: '100vh' }} />
+        <section id="about" style={{ height: '100vh' }} />
+        <section id="skills" style={{ height: '100vh' }} />
+        <section id="projects" style={{ height: '100vh' }} />
+        <section id="contact" style={{ height: '100vh' }} />
       </div>
 
       <style dangerouslySetInnerHTML={{
@@ -456,6 +220,31 @@ export default function Home() {
           60% { transform: translateY(-10px); }
         }
       `}} />
+
+      {/* iOS Gyroscope Permission Overlay */}
+      {showGyroButton && (
+        <div style={{
+          position: 'fixed', bottom: '2rem', left: '0', width: '100vw', display: 'flex', justifyContent: 'center', zIndex: 10001, pointerEvents: 'auto', padding: '0 1rem'
+        }}>
+          <button 
+            onClick={requestGyroPermission}
+            className="pixel-font"
+            style={{
+              backgroundColor: 'var(--color-sunset-orange)',
+              color: 'var(--color-cream)',
+              border: '4px solid #000',
+              padding: '12px 24px',
+              fontSize: '1rem',
+              boxShadow: '4px 4px 0px #000',
+              cursor: 'pointer',
+              textShadow: '2px 2px 0px #000',
+              animation: 'pulseButton 1.5s infinite alternate ease-in-out'
+            }}
+          >
+            ✦ ENABLE 3D PARALLAX ✦
+          </button>
+        </div>
+      )}
     </main>
   );
 }

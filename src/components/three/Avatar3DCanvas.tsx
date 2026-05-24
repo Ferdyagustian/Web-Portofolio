@@ -58,7 +58,7 @@ export default function Avatar3DCanvas() {
         </Suspense>
 
         <OrbitControls 
-          enableZoom={true} 
+          enableZoom={false} 
           enablePan={false} 
           autoRotate={true}
           autoRotateSpeed={2.5}

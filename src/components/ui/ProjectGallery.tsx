@@ -61,23 +61,26 @@ export default function ProjectGallery() {
   }, []);
 
   return (
-    <section
-      id="projects"
+    <div
       style={{
-        minHeight: "100vh",
-        padding: "80px 5% 40px 5%",
+        width: "100%",
+        height: "100%",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
+        justifyContent: "space-between",
+        padding: isMobile ? "12px 10px 10px 10px" : "24px 16px 16px 16px",
+        boxSizing: "border-box",
+        overflow: "hidden"
       }}
     >
-      <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+      <div style={{ textAlign: "center", marginBottom: isMobile ? "0.5rem" : "1rem" }}>
         <h2
           className="pixel-font"
           style={{
-            fontSize: isMobile ? "1.4rem" : "2rem",
+            fontSize: isMobile ? "1.1rem" : "1.6rem",
             color: "var(--color-cream)",
-            textShadow: "4px 4px 0px var(--color-black)",
+            textShadow: "3px 3px 0px var(--color-black)",
+            margin: 0
           }}
         >
           QUEST BOARD (PROJECTS)
@@ -86,10 +89,11 @@ export default function ProjectGallery() {
           className="pixelify-font"
           style={{
             color: "var(--color-cream)",
-            marginTop: "0.8rem",
+            marginTop: "0.4rem",
             opacity: 0.6,
             fontStyle: "italic",
-            fontSize: isMobile ? "0.85rem" : "1rem",
+            fontSize: isMobile ? "0.7rem" : "0.85rem",
+            margin: 0
           }}
         >
           {isMobile
@@ -98,11 +102,13 @@ export default function ProjectGallery() {
         </p>
       </div>
 
-      {isMobile ? (
-        <MobileCarousel projects={DUMMY_PROJECTS} />
-      ) : (
-        <ProjectMap projects={DUMMY_PROJECTS} />
-      )}
-    </section>
+      <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
+        {isMobile ? (
+          <MobileCarousel projects={DUMMY_PROJECTS} />
+        ) : (
+          <ProjectMap projects={DUMMY_PROJECTS} />
+        )}
+      </div>
+    </div>
   );
 }
