@@ -115,6 +115,30 @@ h1, h2, h3, h4, h5, h6, .pixel-font {
   background: var(--color-pixel-leaf);
 }
 
+/* Explicit Retro Scrollbar for Modals */
+.custom-scrollbar-container::-webkit-scrollbar,
+.modal-content-wrapper::-webkit-scrollbar {
+  width: 12px;
+}
+
+.custom-scrollbar-container::-webkit-scrollbar-track,
+.modal-content-wrapper::-webkit-scrollbar-track {
+  background: #111;
+  border-left: 2px solid #333;
+}
+
+.custom-scrollbar-container::-webkit-scrollbar-thumb,
+.modal-content-wrapper::-webkit-scrollbar-thumb {
+  background-color: #4ade80; /* bright green */
+  border: 3px solid #111; /* creates pixel border effect */
+  border-radius: 0px; /* pixel art doesn't use border-radius */
+}
+
+.custom-scrollbar-container::-webkit-scrollbar-thumb:hover,
+.modal-content-wrapper::-webkit-scrollbar-thumb:hover {
+  background-color: #6dd892;
+}
+
 /* Lenis Recommended CSS */
 html.lenis {
   height: auto;
@@ -736,4 +760,59 @@ button:focus-visible {
 @keyframes slideUpAction {
   from { transform: translateY(40px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+/* --- Pixel Art Loading Screen Character --- */
+@keyframes pixelBounce {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
+
+.pixel-slime-container {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  animation: pixelBounce 0.4s steps(4) infinite;
+}
+
+.pixel-slime {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  background-color: transparent;
+  /* Simple 8x8 slime, scaled to 4px units */
+  box-shadow:
+    /* Row 1 */
+    12px -24px 0 0 #4ade80, 16px -24px 0 0 #4ade80, 20px -24px 0 0 #4ade80,
+    /* Row 2 */
+    8px -20px 0 0 #4ade80, 12px -20px 0 0 #4ade80, 16px -20px 0 0 #4ade80, 20px -20px 0 0 #4ade80, 24px -20px 0 0 #4ade80,
+    /* Row 3 (eyes) */
+    4px -16px 0 0 #4ade80, 8px -16px 0 0 #4ade80, 12px -16px 0 0 #1f2937, 16px -16px 0 0 #4ade80, 20px -16px 0 0 #1f2937, 24px -16px 0 0 #4ade80, 28px -16px 0 0 #4ade80,
+    /* Row 4 */
+    0px -12px 0 0 #4ade80, 4px -12px 0 0 #4ade80, 8px -12px 0 0 #4ade80, 12px -12px 0 0 #4ade80, 16px -12px 0 0 #4ade80, 20px -12px 0 0 #4ade80, 24px -12px 0 0 #4ade80, 28px -12px 0 0 #4ade80, 32px -12px 0 0 #4ade80,
+    /* Row 5 */
+    0px -8px 0 0 #4ade80, 4px -8px 0 0 #22c55e, 8px -8px 0 0 #22c55e, 12px -8px 0 0 #4ade80, 16px -8px 0 0 #4ade80, 20px -8px 0 0 #4ade80, 24px -8px 0 0 #22c55e, 28px -8px 0 0 #22c55e, 32px -8px 0 0 #4ade80,
+    /* Row 6 */
+    0px -4px 0 0 #4ade80, 4px -4px 0 0 #4ade80, 8px -4px 0 0 #4ade80, 12px -4px 0 0 #4ade80, 16px -4px 0 0 #4ade80, 20px -4px 0 0 #4ade80, 24px -4px 0 0 #4ade80, 28px -4px 0 0 #4ade80, 32px -4px 0 0 #4ade80;
+}
+
+.pixel-sword {
+  position: absolute;
+  bottom: 0;
+  left: 28px;
+  width: 4px;
+  height: 4px;
+  background-color: transparent;
+  /* Sword held by slime */
+  box-shadow:
+    16px -32px 0 0 #e5e7eb,
+    12px -28px 0 0 #e5e7eb,
+    8px -24px 0 0 #e5e7eb,
+    4px -20px 0 0 #9ca3af,
+    0px -16px 0 0 #4b5563, 8px -16px 0 0 #4b5563,
+    4px -12px 0 0 #b45309,
+    0px -8px 0 0 #b45309;
 }
