@@ -66,7 +66,6 @@ export default function MobileCarousel({ projects }: MobileCarouselProps) {
     const el = scrollRef.current;
     if (!el) return;
 
-    let isScrolling: any;
     const handleScroll = () => {
       if (!hasInteracted) {
         setHasInteracted(true);
@@ -358,9 +357,9 @@ export default function MobileCarousel({ projects }: MobileCarouselProps) {
                   {project.tech_stack.map((tech) => (
                     <span
                       key={tech}
-                      className="pixel-font"
+                      className="pixel-font tech-badge"
                       style={{
-                        fontSize: "0.48rem",
+                        fontSize: "0.75rem",
                         padding: "3px 8px",
                         backgroundColor: "#2d5a27",
                         color: "#fbf8cc",
@@ -388,9 +387,9 @@ export default function MobileCarousel({ projects }: MobileCarouselProps) {
                       href={project.github_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="pixel-font"
+                      className="pixel-font project-link-btn"
                       style={{
-                        fontSize: "0.5rem",
+                        fontSize: "0.7rem",
                         padding: "5px 12px",
                         backgroundColor: "#1a1a2e",
                         color: "#fbf8cc",
@@ -406,9 +405,9 @@ export default function MobileCarousel({ projects }: MobileCarouselProps) {
                       href={project.live_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="pixel-font"
+                      className="pixel-font project-link-btn"
                       style={{
-                        fontSize: "0.5rem",
+                        fontSize: "0.7rem",
                         padding: "5px 12px",
                         backgroundColor: "#2d5a27",
                         color: "#fbf8cc",
@@ -539,22 +538,6 @@ export default function MobileCarousel({ projects }: MobileCarouselProps) {
         ))}
       </div>
 
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-            @keyframes pulseArrow {
-              0%, 100% { transform: translateY(-50%) scale(1); }
-              50% { transform: translateY(-50%) scale(1.18); }
-            }
-            @keyframes swipeHintPulse {
-              0%, 100% { opacity: 0.6; }
-              50% { opacity: 0.2; }
-            }
-            /* Hide scrollbar */
-            div::-webkit-scrollbar { display: none; }
-          `,
-        }}
-      />
     </div>
   );
 }

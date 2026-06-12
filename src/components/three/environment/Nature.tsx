@@ -25,7 +25,7 @@ export function Trees({ theme }: { theme: TimeTheme }) {
 
   const positions = useMemo(() => {
     const pos = [];
-    const minDistance = 4.0; // Safe distance from interactive objects
+    const minDistance = 4; // Safe distance from interactive objects
     let attempts = 0;
 
     while (pos.length < treeCount && attempts < 1000) {
@@ -96,7 +96,7 @@ export function GroundBushes({ theme }: { theme: TimeTheme }) {
   // so re-renders never regenerate random values
   const bushData = useMemo(() => {
     const data = [];
-    const minDistance = 3.0; // Safe distance from interactive objects
+    const minDistance = 6.0; // Safe distance from interactive objects
     let attempts = 0;
 
     while (data.length < count && attempts < 1000) {

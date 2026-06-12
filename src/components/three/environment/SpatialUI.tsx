@@ -274,14 +274,35 @@ export function SpatialHTMLUI({
                   value={formData.message}
                   onChange={e => setFormData((p: any) => ({ ...p, message: e.target.value }))}
                   required
+                  maxLength={2000}
                   style={{ width: '100%', padding: '0.6rem', border: '2px solid var(--color-pixel-leaf)', backgroundColor: 'rgba(5, 5, 10, 0.65)', color: 'var(--color-cream)', outline: 'none', fontFamily: "'VT323', monospace", fontSize: '1.1rem', resize: 'vertical' }}
                 />
+                {/* Character counter */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  marginTop: '2px',
+                  fontFamily: "'VT323', monospace",
+                  fontSize: '0.85rem',
+                  color: formData.message.length > 1800 ? '#f87171' : 'rgba(255,255,255,0.35)',
+                  transition: 'color 0.3s ease',
+                }}>
+                  {formData.message.length} / 2000
+                </div>
               </div>
-              <PixelButton type="submit" disabled={status === 'loading'} style={{ width: '100%', marginTop: '0.3rem', opacity: status === 'loading' ? 0.5 : 1 }}>
-                {status === 'loading' ? 'SENDING...' : 'SEND MESSAGE'}
+              <PixelButton
+                type="submit"
+                disabled={status === 'loading'}
+                style={{ width: '100%', marginTop: '0.3rem', opacity: status === 'loading' ? 0.75 : 1, transition: 'opacity 0.3s ease' }}
+              >
+                {status === 'loading' ? (
+                  <span className="submit-loading-dots">
+                    <span /><span /><span />
+                  </span>
+                ) : 'SEND MESSAGE'}
               </PixelButton>
-              {status === 'success' && <p style={{ color: 'var(--color-moss-green)', fontSize: '1.1rem', textAlign: 'center', marginTop: '0.3rem', fontFamily: "'VT323', monospace" }}>Berhasil dikirim, terimakasih telah mengirim pesan! :D</p>}
-              {status === 'error' && <p style={{ color: 'red', fontSize: '0.9rem', textAlign: 'center', marginTop: '0.3rem', fontFamily: "'VT323', monospace" }}>Gagal: {errorMessage}</p>}
+              {status === 'success' && <p style={{ color: 'var(--color-pixel-leaf)', fontSize: '1.1rem', textAlign: 'center', marginTop: '0.3rem', fontFamily: "'VT323', monospace" }}>Berhasil dikirim, terimakasih telah mengirim pesan! :D</p>}
+              {status === 'error' && <p className="pixel-font" style={{ color: '#f87171', fontSize: '0.75rem', textAlign: 'center', marginTop: '0.3rem' }}>Gagal: {errorMessage}</p>}
             </form>
           </DialogueBox>
         </div>

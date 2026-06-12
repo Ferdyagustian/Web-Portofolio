@@ -56,6 +56,7 @@ export default function PixelForest({
   const [mounted, setMounted] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [isStarted, setIsStarted] = useState(false);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -102,6 +103,9 @@ export default function PixelForest({
         return prev;
       });
 
+      // Show scroll-to-top button after 30% scroll
+      setShowScrollToTop(sp > 0.3);
+
       // Auto close overlays when scrolling away from their respective section
       if (sp < 0.12 || sp > 0.42) {
         setIsAboutOpen(false);
@@ -127,7 +131,20 @@ export default function PixelForest({
     };
   }, [isAboutOpen, isSkillsOpen]);
 
-  // Wave animation is handled purely via CSS and animationDelay inline style
+  // Scroll-to-top handler
+  const handleScrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Section dots scroll targets
+  const SECTION_SCROLL_TARGETS: Record<string, string> = {
+    hero: '#hero',
+    about: '#about',
+    skills: '#skills',
+    projects: '#projects',
+    contact: '#contact',
+  };
+  const SECTIONS = ['hero', 'about', 'skills', 'projects', 'contact'] as const;
 
   return (
     <div ref={containerRef} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 1, pointerEvents: 'auto' }}>
@@ -188,9 +205,17 @@ export default function PixelForest({
 
       {mounted && createPortal(
         <>
-          {/* Screen-Space Overlay Modals (Containerless style - Rendered outside of Three.js stacking context) */}
+          {/* About Modal */}
           <div className={`fullscreen-overlay-modal ${isAboutOpen ? 'is-open' : ''}`} onClick={() => setIsAboutOpen(false)}>
-            <div className="modal-content-wrapper" onClick={(e) => e.stopPropagation()} data-lenis-prevent="true" onWheel={(e) => e.stopPropagation()}>
+            <div className="modal-content-wrapper" onClick={(e) => e.stopPropagation()} data-lenis-prevent="true" onWheel={(e) => e.stopPropagation()} style={{ position: 'relative' }}>
+              {/* Close Button */}
+              <button
+                className="modal-close-btn pixel-font"
+                onClick={(e) => { e.stopPropagation(); setIsAboutOpen(false); }}
+                aria-label="Close About panel"
+              >
+                ×
+              </button>
               <div className="modal-containerless-panel">
                 <DialogueBox title="Ferdy Agustian Prasetyo">
                   <div className="about-content" style={{ flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'center' : 'flex-start' }}>
@@ -236,8 +261,17 @@ export default function PixelForest({
             </div>
           </div>
 
+          {/* Skills Modal */}
           <div className={`fullscreen-overlay-modal ${isSkillsOpen ? 'is-open' : ''}`} onClick={() => setIsSkillsOpen(false)}>
-            <div className="modal-content-wrapper skills-modal-wrapper" onClick={(e) => e.stopPropagation()} data-lenis-prevent="true" onWheel={(e) => e.stopPropagation()}>
+            <div className="modal-content-wrapper skills-modal-wrapper" onClick={(e) => e.stopPropagation()} data-lenis-prevent="true" onWheel={(e) => e.stopPropagation()} style={{ position: 'relative' }}>
+              {/* Close Button */}
+              <button
+                className="modal-close-btn pixel-font"
+                onClick={(e) => { e.stopPropagation(); setIsSkillsOpen(false); }}
+                aria-label="Close Skills panel"
+              >
+                ×
+              </button>
               <div className="modal-containerless-panel">
                 <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
                   <h2 className="pixel-font" style={{ fontSize: '1.5rem', color: 'var(--color-cream)', textShadow: '3px 3px 0px var(--color-black)' }}>
@@ -283,6 +317,36 @@ export default function PixelForest({
               </div>
             </div>
           </div>
+
+          {/* Section Progress Dots — vertical pills on right side */}
+          <nav
+            className={`section-progress-dots ${(isAboutOpen || isSkillsOpen) ? 'hidden' : ''}`}
+            aria-label="Section navigation"
+          >
+            {SECTIONS.map((sec) => (
+              <button
+                key={sec}
+                className={`section-dot-btn ${activeSection === sec ? 'active' : ''}`}
+                onClick={() => {
+                  const el = document.querySelector(SECTION_SCROLL_TARGETS[sec]);
+                  el?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                aria-label={`Go to ${sec} section`}
+                title={sec.charAt(0).toUpperCase() + sec.slice(1)}
+              />
+            ))}
+          </nav>
+
+          {/* Scroll-to-Top Button */}
+          <button
+            className={`scroll-to-top-btn pixel-font ${showScrollToTop ? 'visible' : ''}`}
+            onClick={handleScrollToTop}
+            aria-label="Scroll back to top"
+            title="Back to Top"
+          >
+            ▲
+          </button>
+
           <LoadingScreen onStart={() => setIsStarted(true)} />
         </>
         , document.body)}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
@@ -15,7 +15,17 @@ export function CameraRig({
 }) {
   const cameraGroup = useRef<THREE.Group>(null);
   const { size } = useThree();
-  const isMobile = size.width < 768;
+
+  // Cache isMobile in a ref — updated only on resize, NOT every frame
+  const isMobileRef = useRef(size.width < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      isMobileRef.current = window.innerWidth < 768;
+    };
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useFrame(() => {
     if (!cameraGroup.current) return;
@@ -24,7 +34,7 @@ export function CameraRig({
     const mp = mousePosRef.current ?? { x: 0, y: 0 };
     const sp = scrollProgress.current ?? 0;
 
-    const target = interpolateWaypoints(sp, isMobile);
+    const target = interpolateWaypoints(sp, isMobileRef.current);
 
     // Add parallax offsets (now enabled for mobile via gyroscope)
     const finalPosX = target.pos[0] + (mp.x * 0.4);
@@ -48,3 +58,4 @@ export function CameraRig({
     </group>
   );
 }
+

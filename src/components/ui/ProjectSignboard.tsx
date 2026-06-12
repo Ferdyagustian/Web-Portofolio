@@ -268,9 +268,9 @@ export default function ProjectSignboard({
           {techStack.map((tech) => (
             <span
               key={tech}
-              className="pixel-font"
+              className="pixel-font tech-badge"
               style={{
-                fontSize: "0.48rem",
+                fontSize: "0.75rem",
                 padding: "3px 8px",
                 backgroundColor: "#2d5a27",
                 color: "#fbf8cc",
@@ -301,9 +301,9 @@ export default function ProjectSignboard({
                 target="_blank"
                 rel="noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="pixel-font"
+                className="pixel-font project-link-btn"
                 style={{
-                  fontSize: "0.5rem",
+                  fontSize: "0.7rem",
                   padding: "4px 10px",
                   backgroundColor: "#1a1a2e",
                   color: "#fbf8cc",
@@ -322,9 +322,9 @@ export default function ProjectSignboard({
                 target="_blank"
                 rel="noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="pixel-font"
+                className="pixel-font project-link-btn"
                 style={{
-                  fontSize: "0.5rem",
+                  fontSize: "0.7rem",
                   padding: "4px 10px",
                   backgroundColor: "#2d5a27",
                   color: "#fbf8cc",
@@ -340,17 +340,6 @@ export default function ProjectSignboard({
           </div>
         )}
       </div>
-
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-            @keyframes fadeInUp {
-              from { opacity: 0; transform: translateY(6px); }
-              to { opacity: 1; transform: translateY(0); }
-            }
-          `,
-        }}
-      />
     </div>
   );
 }
