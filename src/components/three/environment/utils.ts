@@ -20,8 +20,8 @@ export interface Waypoint {
 export const WAYPOINTS: Waypoint[] = [
   { pos: [0, 2, 5], rot: [0, 0, 0] },          // Hero (t = 0)
   { pos: [-2.5, 1.5, -9.2], rot: [0, 0.35, 2] }, // About (t = 0.25) (kiri/kanan,atas/bawah,maju/mundur)
-  { pos: [2.5, 1.9, -25], rot: [0, -0.45, 0] }, // Skills (t = 0.5)
-  { pos: [0, 1.8, -40], rot: [0, 0, 0] },       // Projects (t = 0.75)
+  { pos: [2.2, 1.9, -24], rot: [-0.05, -0.35, 0] }, // Skills (t = 0.5)
+  { pos: [0, 1.8, -42], rot: [0, 0, 0] },       // Projects (t = 0.75)
   { pos: [0, 4.3, -52], rot: [0.3, 0, 0] }      // Contact (t = 1.0)
 ];
 

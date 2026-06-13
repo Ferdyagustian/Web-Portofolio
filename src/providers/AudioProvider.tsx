@@ -12,7 +12,7 @@ interface AudioContextType {
   setSfxVolume: (vol: number) => void;
   toggleBgm: () => void;
   toggleSfx: () => void;
-  playSfx: (type: 'hover' | 'click' | 'option') => void;
+  playSfx: (type: 'hover' | 'click' | 'option' | 'gacha_roll' | 'gacha_result' | 'campfire' | 'page_flip' | 'success') => void;
 }
 
 const AudioContext = createContext<AudioContextType | null>(null);
@@ -42,7 +42,8 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
   const sfxBuffers = useRef<Record<string, AudioBuffer>>({});
   const sfxGainRef = useRef<GainNode | null>(null);
   const sfxFallback = useRef<Record<string, HTMLAudioElement[]>>({});
-  const sfxFallbackIdx = useRef<Record<string, number>>({ hover: 0, click: 0, option: 0 });
+  const sfxFallbackIdx = useRef<Record<string, number>>({ hover: 0, click: 0, option: 0, gacha_roll: 0, gacha_result: 0, campfire: 0, page_flip: 0, success: 0 });
+  const activeNodes = useRef<Record<string, AudioBufferSourceNode>>({});
 
   // Load saved preferences on mount
   useEffect(() => {
@@ -61,12 +62,12 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
     const sfxVol = storedSfxVol ? parseFloat(storedSfxVol) : 0.7;
 
     console.log(`[Audio] Init: BGM=${bgmActive}(${bgmVol}), SFX=${sfxActive}(${sfxVol})`);
-    
+
     setIsBgmEnabled(bgmActive);
     setIsSfxEnabled(sfxActive);
     setBgmVolumeState(bgmVol);
     setSfxVolumeState(sfxVol);
-    
+
     // Recovery: ensure localStorage matches our forced-on defaults
     localStorage.setItem("audio_bgm", bgmActive ? "true" : "false");
     localStorage.setItem("audio_sfx", sfxActive ? "true" : "false");
@@ -82,9 +83,14 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
     // Pre-load fallback SFX volumes (client-only — Audio not available on server)
     const vol = storedSfxVol ? parseFloat(storedSfxVol) : 0.7;
     sfxFallback.current = {
-      hover:  [new Audio('/audio/hover.wav'),  new Audio('/audio/hover.wav')],
-      click:  [new Audio('/audio/click.wav'),  new Audio('/audio/click.wav')],
+      hover: [new Audio('/audio/hover.wav'), new Audio('/audio/hover.wav')],
+      click: [new Audio('/audio/click.wav'), new Audio('/audio/click.wav')],
       option: [new Audio('/audio/option.wav'), new Audio('/audio/option.wav')],
+      gacha_roll: [new Audio('/audio/gacha_roll.wav'), new Audio('/audio/gacha_roll.wav')],
+      gacha_result: [new Audio('/audio/gacha_result.wav'), new Audio('/audio/gacha_result.wav')],
+      campfire: [new Audio('/audio/campfire.wav'), new Audio('/audio/campfire.wav')],
+      page_flip: [new Audio('/audio/page_flip.wav'), new Audio('/audio/page_flip.wav')],
+      success: [new Audio('/audio/success.wav'), new Audio('/audio/success.wav')],
     };
     Object.values(sfxFallback.current).flat().forEach(a => { a.volume = vol; a.load(); });
 
@@ -97,15 +103,19 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
         gain.gain.value = vol;
         gain.connect(ctx.destination);
         sfxGainRef.current = gain;
-        const files = { hover: '/audio/hover.wav', click: '/audio/click.wav', option: '/audio/option.wav' };
+        const files = {
+          hover: '/audio/hover.wav', click: '/audio/click.wav', option: '/audio/option.wav',
+          gacha_roll: '/audio/gacha_roll.wav', gacha_result: '/audio/gacha_result.wav',
+          campfire: '/audio/campfire.wav', page_flip: '/audio/page_flip.wav', success: '/audio/success.wav'
+        };
         await Promise.all(Object.entries(files).map(async ([key, path]) => {
           try {
             const res = await fetch(path);
             const buf = await res.arrayBuffer();
             sfxBuffers.current[key] = await ctx.decodeAudioData(buf);
-          } catch {}
+          } catch { }
         }));
-      } catch {}
+      } catch { }
     };
     tryInit();
 
@@ -124,7 +134,7 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
         await webAudioCtxRef.current.resume();
       }
       // If buffers are already loaded, we are good to go!
-      if (Object.keys(sfxBuffers.current).length === 3) return;
+      if (Object.keys(sfxBuffers.current).length === 8) return;
     }
 
     try {
@@ -146,9 +156,13 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
       }
 
       // Load/Reload missing buffers
-      const files = { hover: '/audio/hover.wav', click: '/audio/click.wav', option: '/audio/option.wav' };
+      const files = {
+        hover: '/audio/hover.wav', click: '/audio/click.wav', option: '/audio/option.wav',
+        gacha_roll: '/audio/gacha_roll.wav', gacha_result: '/audio/gacha_result.wav',
+        campfire: '/audio/campfire.wav', page_flip: '/audio/page_flip.wav', success: '/audio/success.wav'
+      };
       console.log("[Audio] Loading SFX buffers...");
-      
+
       await Promise.all(
         Object.entries(files).map(async ([key, path]) => {
           if (sfxBuffers.current[key]) return; // already loaded
@@ -190,7 +204,7 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
     const clamped = Math.max(0, Math.min(1, vol));
     setBgmVolumeState(clamped);
     localStorage.setItem("audio_bgm_vol", clamped.toString());
-    
+
     // Auto-enable if volume is high, auto-disable only if truly 0
     if (clamped > 0) {
       setIsBgmEnabled(true);
@@ -207,7 +221,7 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
     const clamped = Math.max(0, Math.min(1, vol));
     setSfxVolumeState(clamped);
     localStorage.setItem("audio_sfx_vol", clamped.toString());
-    
+
     // Force enable if user interacts with the slider
     if (clamped > 0) {
       setIsSfxEnabled(true);
@@ -219,7 +233,7 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
 
     // Update gain node immediately if it exists
     if (sfxGainRef.current) {
-      sfxGainRef.current.gain.setTargetAtTime(clamped, 0, 0.05);
+      sfxGainRef.current.gain.setTargetAtTime(clamped, webAudioCtxRef.current?.currentTime ?? 0, 0.05);
     }
   }, []);
 
@@ -234,7 +248,7 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
         cur.pause();
         console.log("[Audio] BGM Paused (Volume 0)");
       } else if (finalVol > 0 && cur.paused && isBgmEnabled) {
-        cur.play().catch(() => {});
+        cur.play().catch(() => { });
         console.log(`[Audio] BGM Playing at ${finalVol}`);
       }
     }
@@ -307,7 +321,7 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
   }, [theme, isBgmEnabled, isMounted, activePlayer, bgmVolume]);
 
   // ── playSfx: Web Audio → fallback HTML5 pool ─────────────────────
-  const playSfx = useCallback((type: 'hover' | 'click' | 'option') => {
+  const playSfx = useCallback((type: 'hover' | 'click' | 'option' | 'gacha_roll' | 'gacha_result' | 'campfire' | 'page_flip' | 'success') => {
     if (!isSfxEnabled) return;
 
     const ctx = webAudioCtxRef.current;
@@ -318,16 +332,52 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
       // Best path: Web Audio — instant & polyphonic
       try {
         if (ctx.state === 'suspended') ctx.resume(); // Ensure it's active
-        
+
+        // --- PENGATURAN VOLUME INDIVIDUAL SFX ---
+        // Ubah angka di sini untuk mengatur keras/pelan masing-masing suara (1.0 = normal, 2.0 = 2x lebih keras, 0.5 = setengah)
+        const SFX_BASE_VOLUME: Record<string, number> = {
+          hover: 1.0,
+          click: 1.0,
+          option: 1.0,
+          gacha_roll: 1.0,
+          gacha_result: 1.0,
+          campfire: 0.5,   // Contoh: campfire lebih keras
+          page_flip: 1.5,  // Contoh: buka buku lebih keras
+          success: 1.0,
+        };
+
+        const baseVol = SFX_BASE_VOLUME[type] ?? 1.0;
+
+        const isExclusive = type === 'campfire' || type === 'page_flip';
+        if (isExclusive && activeNodes.current['exclusive']) {
+          try { activeNodes.current['exclusive'].stop(); } catch (e) {}
+        }
+
+        const individualGain = ctx.createGain();
+        individualGain.gain.value = baseVol;
+
         const source = ctx.createBufferSource();
         source.buffer = buf;
-        source.connect(gain);
+
+        source.connect(individualGain);
+        individualGain.connect(gain);
+
         source.start(0);
-        console.log(`[SFX] Playing: ${type} (Web Audio)`);
+
+        if (isExclusive) {
+          activeNodes.current['exclusive'] = source;
+          source.onended = () => {
+            if (activeNodes.current['exclusive'] === source) delete activeNodes.current['exclusive'];
+          };
+        }
+
+        console.log(`[SFX] Playing: ${type} (Web Audio) | vol: ${baseVol}`);
         return;
       } catch (e) {
         console.warn(`[SFX] Web Audio error for ${type}:`, e);
       }
+    } else {
+      console.log(`[SFX] WebAudio unavailable for ${type}. ctx:${!!ctx}, buf:${!!buf}, gain:${!!gain}`);
     }
 
     // Fallback: HTML5 Audio pool (round-robin so rapid hovers don't cut off)
@@ -336,7 +386,14 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
       const idx = sfxFallbackIdx.current[type] % pool.length;
       sfxFallbackIdx.current[type] = idx + 1;
       const el = pool[idx];
-      el.volume = sfxVolume;
+
+      const SFX_BASE_VOLUME: Record<string, number> = {
+        hover: 1.0, click: 1.0, option: 1.0, gacha_roll: 1.0, gacha_result: 1.0,
+        campfire: 0.5, page_flip: 1.5, success: 1.0,
+      };
+      const baseVol = SFX_BASE_VOLUME[type] ?? 1.0;
+
+      el.volume = Math.min(1, Math.max(0, sfxVolume * baseVol));
       el.currentTime = 0;
       el.play()
         .then(() => console.log(`[SFX] Playing: ${type} (Fallback)`))

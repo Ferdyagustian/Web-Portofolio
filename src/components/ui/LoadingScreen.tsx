@@ -15,7 +15,7 @@ const getThemeAccentColor = (theme: string) => {
 };
 
 interface LoadingScreenProps {
-  onStart: () => void;
+  onStart: (mode: 'normal' | 'light' | 'potato') => void;
 }
 
 export function LoadingScreen({ onStart }: LoadingScreenProps) {
@@ -23,6 +23,7 @@ export function LoadingScreen({ onStart }: LoadingScreenProps) {
   const [isFading, setIsFading] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [performanceMode, setPerformanceMode] = useState<'normal' | 'light' | 'potato'>('normal');
   const theme = useTheme();
   const themeColor = getThemeAccentColor(theme);
 
@@ -34,7 +35,18 @@ export function LoadingScreen({ onStart }: LoadingScreenProps) {
   }, []);
 
   const [simulatedProgress, setSimulatedProgress] = useState(0);
+  const [isReturning, setIsReturning] = useState(false);
+
   useEffect(() => {
+    const visited = sessionStorage.getItem('visited_home');
+    if (visited) {
+      setIsReturning(true);
+      setSimulatedProgress(100);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isReturning) return;
     const interval = setInterval(() => {
       setSimulatedProgress((p) => {
         if (p >= 85) { clearInterval(interval); return 85; }
@@ -43,17 +55,33 @@ export function LoadingScreen({ onStart }: LoadingScreenProps) {
     }, 100);
     const timeout = setTimeout(() => setSimulatedProgress(100), 8000);
     return () => { clearInterval(interval); clearTimeout(timeout); };
-  }, []);
+  }, [isReturning]);
 
   const currentProgress = Math.max(progress, simulatedProgress);
   const isLoaded = currentProgress >= 100 || progress === 100;
 
-  const handleStart = () => {
+  const handleStart = React.useCallback((e?: React.MouseEvent) => {
+    if (e && (e.target as HTMLElement).closest('.performance-toggle')) return;
     if (isFading) return;
     setIsFading(true);
-    setTimeout(() => onStart(), 500);
-    setTimeout(() => setIsVisible(false), 900);
-  };
+    
+    // Save preference when starting
+    sessionStorage.setItem('visited_home', 'true');
+    sessionStorage.setItem('performanceMode', performanceMode);
+    
+    setTimeout(() => onStart(performanceMode), 150);
+    setTimeout(() => setIsVisible(false), 400);
+  }, [isFading, onStart, performanceMode]);
+
+  useEffect(() => {
+    if (isLoaded && isReturning && !isFading) {
+      const savedMode = (sessionStorage.getItem('performanceMode') as 'normal' | 'light' | 'potato') || 'normal';
+      setPerformanceMode(savedMode);
+      setIsFading(true);
+      setTimeout(() => onStart(savedMode), 150);
+      setTimeout(() => setIsVisible(false), 400);
+    }
+  }, [isLoaded, isReturning, isFading, onStart]);
 
   if (!isVisible) return null;
 
@@ -152,29 +180,94 @@ export function LoadingScreen({ onStart }: LoadingScreenProps) {
         </div>
 
         {/* Click to start prompt */}
-        <div style={{
-          marginTop: isMobile ? '3rem' : '4rem',
-          height: '2rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
-          opacity: isLoaded ? 1 : 0,
-          transform: isLoaded ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(10px)',
-        }}>
-          <span
-            className={isLoaded ? 'animate-pulse' : ''}
-            style={{
-              color: themeColor,
-              fontFamily: 'var(--font-sixtyfour), monospace',
-              letterSpacing: '0.05em',
-              fontSize: isMobile ? '0.45rem' : '0.55rem',
-              textShadow: `0 0 12px ${themeColor}80`,
-            }}
-          >
-            CLICK ANYWHERE TO START
-          </span>
-        </div>
+        {!isReturning && (
+          <div style={{
+            marginTop: isMobile ? '3rem' : '4rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '1.5rem',
+            transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+            opacity: isLoaded ? 1 : 0,
+            transform: isLoaded ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(10px)',
+          }}>
+            {/* Segmented Control for Performance Modes */}
+            <div 
+              className="performance-toggle pixel-font"
+              style={{
+                display: 'flex',
+                gap: '4px',
+                backgroundColor: 'rgba(0,0,0,0.6)',
+                padding: '4px',
+                borderRadius: '8px',
+                border: '1px solid #334155',
+                userSelect: 'none',
+              }}
+            >
+              <button
+                onClick={(e) => { e.stopPropagation(); setPerformanceMode('normal'); }}
+                style={{
+                  background: performanceMode === 'normal' ? 'linear-gradient(135deg, #4ade8022, transparent)' : 'transparent',
+                  color: performanceMode === 'normal' ? '#4ade80' : '#64748b',
+                  border: `1px solid ${performanceMode === 'normal' ? '#4ade80' : 'transparent'}`,
+                  borderRadius: '4px',
+                  padding: '8px 16px',
+                  fontSize: '0.65rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  textShadow: performanceMode === 'normal' ? '0 0 8px rgba(74, 222, 128, 0.4)' : 'none',
+                }}
+              >
+                🌟 Normal
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setPerformanceMode('light'); }}
+                style={{
+                  background: performanceMode === 'light' ? 'linear-gradient(135deg, #60a5fa22, transparent)' : 'transparent',
+                  color: performanceMode === 'light' ? '#60a5fa' : '#64748b',
+                  border: `1px solid ${performanceMode === 'light' ? '#60a5fa' : 'transparent'}`,
+                  borderRadius: '4px',
+                  padding: '8px 16px',
+                  fontSize: '0.65rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  textShadow: performanceMode === 'light' ? '0 0 8px rgba(96, 165, 250, 0.4)' : 'none',
+                }}
+              >
+                ⚡ Light
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setPerformanceMode('potato'); }}
+                style={{
+                  background: performanceMode === 'potato' ? 'linear-gradient(135deg, #fbbf2422, transparent)' : 'transparent',
+                  color: performanceMode === 'potato' ? '#fbbf24' : '#64748b',
+                  border: `1px solid ${performanceMode === 'potato' ? '#fbbf24' : 'transparent'}`,
+                  borderRadius: '4px',
+                  padding: '8px 16px',
+                  fontSize: '0.65rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  textShadow: performanceMode === 'potato' ? '0 0 8px rgba(251, 191, 36, 0.4)' : 'none',
+                }}
+              >
+                🥔 Ultra Potato
+              </button>
+            </div>
+
+            <span
+              className={isLoaded ? 'animate-pulse' : ''}
+              style={{
+                color: themeColor,
+                fontFamily: 'var(--font-sixtyfour), monospace',
+                letterSpacing: '0.05em',
+                fontSize: isMobile ? '0.45rem' : '0.55rem',
+                textShadow: `0 0 12px ${themeColor}80`,
+              }}
+            >
+              CLICK ANYWHERE TO START
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -278,11 +278,11 @@ html.lenis {
     border-width: 4px;
   }
   .hero-title {
-    font-size: 1.6rem;
-    letter-spacing: 1px;
+    font-size: 2.8rem; /* Increased from 1.6rem */
+    letter-spacing: 2px;
   }
   .hero-subtitle {
-    font-size: 1rem;
+    font-size: 1.25rem; /* Increased from 1rem */
     margin-top: 1rem;
   }
   .about-content {
@@ -302,7 +302,7 @@ html.lenis {
     gap: 0.4rem;
   }
   .navbar-links a {
-    font-size: 0.55rem !important;
+    font-size: 0.65rem !important;
   }
   .navbar-container > div.pixel-font {
     font-size: 0.95rem !important;
@@ -1078,4 +1078,24 @@ button:focus-visible {
   overflow-x: hidden;
   /* Safe contain — does NOT affect overflow or positioning */
   contain: style;
+}
+
+/* === Quest Detail Page === */
+.quest-back-link:hover {
+  color: var(--color-pixel-leaf) !important;
+}
+
+.quest-back-link:hover,
+a.quest-link-btn:hover {
+  opacity: 0.85;
+}
+
+/* --- Ultra Potato Mode (Performance Optimizations for CPU Rendering) --- */
+body[data-potato="true"] * {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  /* Prevent heavy gradient recalculations if possible */
+  border-radius: 0 !important;
 }

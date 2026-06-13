@@ -2,17 +2,11 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
-interface Project {
-  title: string;
-  description: string;
-  tech_stack: string[];
-  github_url?: string;
-  live_url?: string;
-}
+import { Project, getStatusDisplay } from "../../lib/questData";
 
 interface MobileCarouselProps {
   projects: Project[];
+  onSelectProject: (project: Project) => void;
 }
 
 // Pin colors matching the signboard component
@@ -36,7 +30,7 @@ const PAPER_COLORS = [
   "#e3f2fd",
 ];
 
-export default function MobileCarousel({ projects }: MobileCarouselProps) {
+export default function MobileCarousel({ projects, onSelectProject }: MobileCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showArrow, setShowArrow] = useState(false);
@@ -139,7 +133,7 @@ export default function MobileCarousel({ projects }: MobileCarouselProps) {
   };
 
   return (
-    <div style={{ position: "relative", width: "100%" }}>
+    <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", flexDirection: "column" }}>
       {/* Card counter */}
       <div
         className="pixel-font"
@@ -176,12 +170,14 @@ export default function MobileCarousel({ projects }: MobileCarouselProps) {
       <div
         ref={scrollRef}
         style={{
+          flex: 1,
           display: "flex",
           gap: "16px",
           overflowX: "auto",
+          overflowY: "hidden",
           scrollSnapType: "x mandatory",
           WebkitOverflowScrolling: "touch",
-          paddingBottom: "16px",
+          paddingBottom: "8px",
           paddingLeft: "6%",
           paddingRight: "6%",
           scrollbarWidth: "none",
@@ -199,10 +195,14 @@ export default function MobileCarousel({ projects }: MobileCarouselProps) {
               data-index={i}
               style={{
                 flex: "0 0 88%",
+                height: "100%", // Strictly enforce height
+                display: "flex",
+                flexDirection: "column",
                 scrollSnapAlign: "center",
                 position: "relative",
-                transform: `rotate(${getTilt(i)}deg)`,
+                transform: currentIndex === i ? "rotate(0deg)" : `rotate(${getTilt(i)}deg)`,
                 transition: "transform 0.3s ease",
+                paddingTop: "12px", // Give space for the pin
               }}
             >
               {/* Thumbtack Pin */}
@@ -268,12 +268,17 @@ export default function MobileCarousel({ projects }: MobileCarouselProps) {
               <div
                 style={{
                   backgroundColor: paperColor,
-                  padding: "24px 20px 20px",
+                  padding: "20px 16px 16px",
                   position: "relative",
+                  height: "100%", // Force strict bounds
+                  flex: 1, 
+                  display: "flex",
+                  flexDirection: "column",
                   boxShadow:
                     "2px 4px 12px rgba(0,0,0,0.2), 1px 1px 0px rgba(0,0,0,0.05)",
                   imageRendering: "pixelated",
                   borderBottom: "2px solid rgba(0,0,0,0.06)",
+                  overflow: "hidden", // Prevent any child from breaking the layout
                 }}
               >
                 {/* Paper lines */}
@@ -300,124 +305,170 @@ export default function MobileCarousel({ projects }: MobileCarouselProps) {
                   }}
                 />
 
-                {/* Project Number */}
-                <div
-                  className="pixel-font"
-                  style={{
-                    fontSize: "0.55rem",
-                    color: "rgba(0,0,0,0.3)",
-                    marginBottom: "8px",
-                    position: "relative",
-                    zIndex: 2,
-                  }}
-                >
-                  #{String(i + 1).padStart(2, "0")}
-                </div>
-
-                {/* Title */}
-                <div
-                  className="pixel-font"
-                  style={{
-                    fontSize: "0.85rem",
-                    color: "#1a1a2e",
-                    marginBottom: "12px",
-                    lineHeight: 1.5,
-                    position: "relative",
-                    zIndex: 2,
-                  }}
-                >
-                  {project.title}
-                </div>
-
-                {/* Description — always visible on mobile */}
-                <p
-                  className="pixelify-font"
-                  style={{
-                    fontSize: "0.85rem",
-                    color: "#333",
-                    lineHeight: 1.7,
-                    marginBottom: "14px",
-                    position: "relative",
-                    zIndex: 2,
-                  }}
-                >
-                  {project.description}
-                </p>
-
-                {/* Tech Stack */}
+                {/* Inner Scrollable Content */}
                 <div
                   style={{
+                    height: "100%", // Fill paper exactly
+                    overflowY: "auto",
                     display: "flex",
-                    gap: "5px",
-                    flexWrap: "wrap",
+                    flexDirection: "column",
                     position: "relative",
                     zIndex: 2,
+                    paddingRight: "4px", // slight padding for scrollbar
+                    paddingBottom: "64px", // Give breathing room for absolute button
+                    scrollbarWidth: "thin",
                   }}
                 >
-                  {project.tech_stack.map((tech) => (
+                  {/* Project Number */}
+                  <div
+                    className="pixel-font"
+                    style={{
+                      fontSize: "0.55rem",
+                      color: "rgba(0,0,0,0.3)",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    #{String(i + 1).padStart(2, "0")}
+                  </div>
+
+                  {/* Title */}
+                  <div
+                    className="pixel-font"
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "#1a1a2e",
+                      marginBottom: "10px",
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {project.title}
+                  </div>
+
+                  {/* Description */}
+                  <p
+                    className="pixelify-font"
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "#333",
+                      lineHeight: 1.7,
+                      margin: 0,
+                      marginBottom: "12px",
+                    }}
+                  >
+                    {project.description}
+                  </p>
+
+                  {/* Tech Stack */}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "5px",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    {project.tech_stack.map((tech) => (
+                      <span
+                        key={tech}
+                        className="pixel-font tech-badge"
+                        style={{
+                          fontSize: "0.55rem",
+                          padding: "4px 6px",
+                          backgroundColor: "#2d5a27",
+                          color: "#fbf8cc",
+                          border: "1px solid #1a3a15",
+                          borderRadius: "2px",
+                        }}
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Links */}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      marginTop: "14px",
+                      flexWrap: "wrap",
+                      paddingBottom: "8px",
+                    }}
+                  >
+                    {project.github_url && (
+                      <a
+                        href={project.github_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="pixel-font project-link-btn"
+                        style={{
+                          fontSize: "0.7rem",
+                          padding: "5px 12px",
+                          backgroundColor: "#1a1a2e",
+                          color: "#fbf8cc",
+                          border: "2px solid #fbf8cc",
+                          textDecoration: "none",
+                        }}
+                      >
+                        [GITHUB]
+                      </a>
+                    )}
+                    {project.live_url && (
+                      <a
+                        href={project.live_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="pixel-font project-link-btn"
+                        style={{
+                          fontSize: "0.7rem",
+                          padding: "5px 12px",
+                          backgroundColor: "#2d5a27",
+                          color: "#fbf8cc",
+                          border: "2px solid #fbf8cc",
+                          textDecoration: "none",
+                        }}
+                      >
+                        [LIVE]
+                      </a>
+                    )}
+                    {/* Status badge */}
                     <span
-                      key={tech}
-                      className="pixel-font tech-badge"
+                      className="pixel-font"
                       style={{
-                        fontSize: "0.75rem",
-                        padding: "3px 8px",
-                        backgroundColor: "#2d5a27",
-                        color: "#fbf8cc",
-                        border: "1px solid #1a3a15",
-                        borderRadius: "2px",
+                        fontSize: "0.55rem",
+                        padding: "4px 8px",
+                        backgroundColor: getStatusDisplay(project.status).color + "22",
+                        color: getStatusDisplay(project.status).color,
+                        border: `1px solid ${getStatusDisplay(project.status).color}55`,
+                        alignSelf: "center",
                       }}
                     >
-                      {tech}
+                      {getStatusDisplay(project.status).label}
                     </span>
-                  ))}
+                  </div>
                 </div>
 
-                {/* Links */}
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "8px",
-                    marginTop: "14px",
-                    position: "relative",
-                    zIndex: 2,
-                  }}
-                >
-                  {project.github_url && (
-                    <a
-                      href={project.github_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="pixel-font project-link-btn"
-                      style={{
-                        fontSize: "0.7rem",
-                        padding: "5px 12px",
-                        backgroundColor: "#1a1a2e",
-                        color: "#fbf8cc",
-                        border: "2px solid #fbf8cc",
-                        textDecoration: "none",
-                      }}
-                    >
-                      [GITHUB]
-                    </a>
-                  )}
-                  {project.live_url && (
-                    <a
-                      href={project.live_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="pixel-font project-link-btn"
-                      style={{
-                        fontSize: "0.7rem",
-                        padding: "5px 12px",
-                        backgroundColor: "#2d5a27",
-                        color: "#fbf8cc",
-                        border: "2px solid #fbf8cc",
-                        textDecoration: "none",
-                      }}
-                    >
-                      [LIVE]
-                    </a>
-                  )}
+                {/* ACCEPT QUEST button pinned absolutely to bottom */}
+                <div style={{ position: "absolute", bottom: "16px", left: "16px", right: "16px", zIndex: 10 }}>
+                  <button
+                    id={`mobile-accept-quest-${project.slug}`}
+                    onClick={() => onSelectProject(project)}
+                    className="pixel-font"
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      backgroundColor: "#2d5a27",
+                      color: "#fbf8cc",
+                      border: "3px solid #4ade80",
+                      cursor: "pointer",
+                      fontSize: "0.65rem",
+                      letterSpacing: "2px",
+                      boxShadow: "4px 4px 0px rgba(0,0,0,0.5)",
+                      textShadow: "2px 2px 0px #000",
+                      animation: currentIndex === i ? "pulseAcceptBtn 2s ease-in-out infinite" : "none",
+                    }}
+                  >
+                    ⚔ ACCEPT QUEST
+                  </button>
                 </div>
               </div>
             </div>
@@ -425,118 +476,106 @@ export default function MobileCarousel({ projects }: MobileCarouselProps) {
         })}
       </div>
 
-      {/* Navigation arrows — highlighted after 3s of no interaction */}
-      {/* Left Arrow */}
-      {currentIndex > 0 && (
-        <button
-          onClick={goPrev}
-          aria-label="Previous project"
-          style={{
-            position: "absolute",
-            left: "4px",
-            top: "55%",
-            transform: "translateY(-50%)",
-            backgroundColor: showArrow
-              ? "var(--color-pixel-leaf)"
-              : "rgba(2,6,23,0.7)",
-            color: showArrow ? "var(--color-black)" : "var(--color-cream)",
-            border: showArrow
-              ? "3px solid var(--color-cream)"
-              : "2px solid var(--color-moss-green)",
-            width: "42px",
-            height: "42px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            zIndex: 20,
-            boxShadow: showArrow
-              ? "0 0 18px rgba(74,222,128,0.6), 0 0 40px rgba(74,222,128,0.2), 4px 4px 0px rgba(0,0,0,0.5)"
-              : "2px 2px 0px rgba(0,0,0,0.5)",
-            transition: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
-            animation: showArrow
-              ? "pulseArrow 1.2s ease-in-out infinite"
-              : "none",
-            fontSize: "1.2rem",
-          }}
-          className="pixel-font"
-        >
-          <ChevronLeft size={20} strokeWidth={3} />
-        </button>
-      )}
-
-      {/* Right Arrow */}
-      {currentIndex < projects.length - 1 && (
-        <button
-          onClick={goNext}
-          aria-label="Next project"
-          style={{
-            position: "absolute",
-            right: "4px",
-            top: "55%",
-            transform: "translateY(-50%)",
-            backgroundColor: showArrow
-              ? "var(--color-pixel-leaf)"
-              : "rgba(2,6,23,0.7)",
-            color: showArrow ? "var(--color-black)" : "var(--color-cream)",
-            border: showArrow
-              ? "3px solid var(--color-cream)"
-              : "2px solid var(--color-moss-green)",
-            width: "42px",
-            height: "42px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            zIndex: 20,
-            boxShadow: showArrow
-              ? "0 0 18px rgba(74,222,128,0.6), 0 0 40px rgba(74,222,128,0.2), 4px 4px 0px rgba(0,0,0,0.5)"
-              : "2px 2px 0px rgba(0,0,0,0.5)",
-            transition: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
-            animation: showArrow
-              ? "pulseArrow 1.2s ease-in-out infinite"
-              : "none",
-            fontSize: "1.2rem",
-          }}
-          className="pixel-font"
-        >
-          <ChevronRight size={20} strokeWidth={3} />
-        </button>
-      )}
-
-      {/* Dot indicators — pixel style */}
+      {/* Navigation Bar (Arrows + Dots) */}
       <div
         style={{
           display: "flex",
-          justifyContent: "center",
-          gap: "8px",
-          marginTop: "14px",
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginTop: "12px",
+          marginBottom: "4px",
+          width: "100%",
+          padding: "0 8px",
+          flexShrink: 0,
         }}
       >
-        {projects.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => scrollToIndex(i)}
-            aria-label={`Go to project ${i + 1}`}
-            style={{
-              width: currentIndex === i ? "24px" : "8px",
-              height: "8px",
-              backgroundColor:
-                currentIndex === i
-                  ? "var(--color-pixel-leaf)"
-                  : "var(--color-moss-green)",
-              border: "none",
-              cursor: "pointer",
-              transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
-              imageRendering: "pixelated",
-              boxShadow:
-                currentIndex === i
-                  ? "0 0 8px rgba(74,222,128,0.4)"
-                  : "none",
-            }}
-          />
-        ))}
+        {/* Left Arrow */}
+        <button
+          onClick={goPrev}
+          aria-label="Previous project"
+          disabled={currentIndex === 0}
+          style={{
+            backgroundColor: currentIndex > 0 ? "var(--color-pixel-leaf)" : "var(--color-moss-green)",
+            color: currentIndex > 0 ? "var(--color-black)" : "var(--color-cream)",
+            border: currentIndex > 0 ? "2px solid var(--color-cream)" : "2px solid rgba(0,0,0,0.2)",
+            width: "36px",
+            height: "36px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: currentIndex > 0 ? "pointer" : "default",
+            opacity: currentIndex > 0 ? 1 : 0.5,
+            boxShadow: currentIndex > 0 ? "2px 2px 0px rgba(0,0,0,0.5)" : "none",
+            transition: "all 0.2s",
+          }}
+          className="pixel-font"
+        >
+          <ChevronLeft size={18} strokeWidth={3} />
+        </button>
+
+        {/* Dots */}
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          {projects.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => scrollToIndex(i)}
+              aria-label={`Go to project ${i + 1}`}
+              style={{
+                width: currentIndex === i ? "24px" : "8px",
+                height: "8px",
+                backgroundColor:
+                  currentIndex === i
+                    ? "var(--color-pixel-leaf)"
+                    : "var(--color-moss-green)",
+                border: "none",
+                cursor: "pointer",
+                transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                imageRendering: "pixelated",
+                boxShadow:
+                  currentIndex === i
+                    ? "0 0 8px rgba(74,222,128,0.4)"
+                    : "none",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Right Arrow */}
+        <button
+          onClick={goNext}
+          aria-label="Next project"
+          disabled={currentIndex === projects.length - 1}
+          style={{
+            backgroundColor: currentIndex < projects.length - 1 ? "var(--color-pixel-leaf)" : "var(--color-moss-green)",
+            color: currentIndex < projects.length - 1 ? "var(--color-black)" : "var(--color-cream)",
+            border: currentIndex < projects.length - 1 ? "2px solid var(--color-cream)" : "2px solid rgba(0,0,0,0.2)",
+            width: "36px",
+            height: "36px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: currentIndex < projects.length - 1 ? "pointer" : "default",
+            opacity: currentIndex < projects.length - 1 ? 1 : 0.5,
+            boxShadow: currentIndex < projects.length - 1 ? "2px 2px 0px rgba(0,0,0,0.5)" : "none",
+            transition: "all 0.2s",
+          }}
+          className="pixel-font"
+        >
+          <ChevronRight size={18} strokeWidth={3} />
+        </button>
       </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes pulseAcceptBtn {
+          0%, 100% { box-shadow: 4px 4px 0px rgba(0,0,0,0.5), 0 0 0px rgba(74,222,128,0); }
+          50% { box-shadow: 4px 4px 0px rgba(0,0,0,0.5), 0 0 16px rgba(74,222,128,0.5); }
+        }
+        @keyframes swipeHintPulse {
+          0%, 100% { opacity: 0.6; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.05); }
+        }
+      ` }} />
 
     </div>
   );

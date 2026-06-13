@@ -55,11 +55,13 @@ export function InteractiveFog({
   scrollProgress,
   reducedMotion = false,
   isStarted = false,
+  isLowQuality = false,
 }: {
   theme: TimeTheme;
   scrollProgress: React.RefObject<number>;
   reducedMotion?: boolean;
   isStarted?: boolean;
+  isLowQuality?: boolean;
 }) {
   const { size } = useThree();
   const isMobile = size.width < 768;
@@ -145,8 +147,12 @@ export function InteractiveFog({
       cp.opacity = lerpNum(cp.opacity, targetOpacity * cp.maxDensity, LERP_SPEED * 1.5);
     }
 
-    // 3. Performance Guard — only hide if both target and current opacity are practically invisible
-    if (targetOpacity <= 0.001 && cp.opacity <= 0.005) {
+    // GPU Warm-up: Turn on shader slightly earlier (sp < 0.45) 
+    // even when opacity is 0, to absorb compilation/fill-rate spikes before fog is visible.
+    const isWarmingUp = sp < 0.45;
+
+    // 3. Performance Guard — only hide if both target and current opacity are practically invisible AND not warming up
+    if (targetOpacity <= 0.001 && cp.opacity <= 0.005 && !isWarmingUp) {
       if (meshRef.current) meshRef.current.visible = false;
       return; // Skip other heavy uniform updates to save GPU
     }

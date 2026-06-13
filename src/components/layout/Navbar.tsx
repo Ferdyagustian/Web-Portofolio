@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { gsap } from "gsap";
+import { usePathname } from "next/navigation";
 import { useAudio } from "../../providers/AudioProvider";
 
 import { useLenis } from 'lenis/react';
@@ -158,6 +159,7 @@ function NavLink({
 }
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState<SectionName>('hero');
   const logoRef = useRef<HTMLAnchorElement>(null);
@@ -201,6 +203,12 @@ export default function Navbar() {
       ease: "elastic.out(1, 0.5)",
     });
   }, []);
+
+  // Hide the global Navbar on quest detail pages (to prevent overlap)
+  // Must be placed after all hooks to comply with React Rules of Hooks!
+  if (pathname && pathname.startsWith("/quest")) {
+    return null;
+  }
 
   return (
     <nav className="navbar-container" style={{

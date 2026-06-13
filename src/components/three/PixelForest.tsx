@@ -13,6 +13,7 @@ import ObservableSkill from '../ui/ObservableSkill';
 import PixelButton from '../ui/PixelButton';
 import InteractiveAvatar from '../ui/InteractiveAvatar';
 import { LoadingScreen } from '../ui/LoadingScreen';
+import { useAudio } from '../../providers/AudioProvider';
 
 // Import split components
 import { SkyDome, DynamicSky, CelestialBody, DynamicClouds } from './environment/Sky';
@@ -30,6 +31,7 @@ interface PixelForestProps {
   status: 'idle' | 'loading' | 'success' | 'error';
   handleSubmit: (e: React.FormEvent) => void;
   errorMessage: string;
+  onQuestNavigate?: (slug: string) => void;
 }
 
 export default function PixelForest({
@@ -40,6 +42,7 @@ export default function PixelForest({
   status,
   handleSubmit,
   errorMessage,
+  onQuestNavigate,
 }: PixelForestProps) {
   const defaultRef = useRef({ x: 0, y: 0 });
   const effectiveRef = mousePosRef ?? defaultRef;
@@ -48,19 +51,50 @@ export default function PixelForest({
   // fires from the full wrapper div — not blocked by Drei Html overlay divs
   const containerRef = useRef<HTMLDivElement>(null);
 
+  let playSfx: any = () => {};
+  try { playSfx = useAudio().playSfx; } catch {}
+
   const scrollProgress = useRef(0);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isSkillsOpen, setIsSkillsOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<'hero' | 'about' | 'skills' | 'projects' | 'contact'>('hero');
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [isStarted, setIsStarted] = useState(false);
-  const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const [performanceMode, setPerformanceMode] = useState<'normal' | 'light' | 'potato'>('normal');
+  const scrollToTopBtnRef = useRef<HTMLButtonElement>(null);
+  const sectionDotsRef = useRef<HTMLElement>(null);
+  
+  const SECTIONS = ['hero', 'about', 'skills', 'projects', 'contact'] as const;
+  const SECTION_SCROLL_TARGETS: Record<typeof SECTIONS[number], string> = {
+    hero: '#hero',
+    about: '#about',
+    skills: '#skills',
+    projects: '#projects',
+    contact: '#contact',
+  };
+
+  // Initialize scroll progress immediately on mount based on current scroll position (useful when loading via hash)
+  useEffect(() => {
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    if (maxScroll > 0) {
+      scrollProgress.current = window.scrollY / maxScroll;
+    }
+  }, []);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      if (performanceMode === 'potato') {
+        document.body.setAttribute('data-potato', 'true');
+      } else {
+        document.body.removeAttribute('data-potato');
+      }
+    }
+  }, [performanceMode]);
 
   // P4: Detect prefers-reduced-motion accessibility preference
   useEffect(() => {
@@ -86,6 +120,15 @@ export default function PixelForest({
       const sp = maxScroll > 0 ? window.scrollY / maxScroll : 0;
       scrollProgress.current = sp;
 
+      // Show scroll-to-top button after 30% scroll
+      if (scrollToTopBtnRef.current) {
+        if (sp > 0.3) {
+          scrollToTopBtnRef.current.classList.add('visible');
+        } else {
+          scrollToTopBtnRef.current.classList.remove('visible');
+        }
+      }
+
       // Section boundary matching (same as interpolateWaypoints)
       let section: 'hero' | 'about' | 'skills' | 'projects' | 'contact' = 'hero';
       if (sp >= 0.12 && sp <= 0.42) {
@@ -98,13 +141,19 @@ export default function PixelForest({
         section = 'contact';
       }
 
-      setActiveSection((prev) => {
-        if (prev !== section) return section;
-        return prev;
-      });
-
-      // Show scroll-to-top button after 30% scroll
-      setShowScrollToTop(sp > 0.3);
+      // Update section dots without triggering React state re-render
+      if (sectionDotsRef.current) {
+        const dots = sectionDotsRef.current.children;
+        SECTIONS.forEach((sec, idx) => {
+          if (dots[idx]) {
+            if (sec === section) {
+              dots[idx].classList.add('active');
+            } else {
+              dots[idx].classList.remove('active');
+            }
+          }
+        });
+      }
 
       // Auto close overlays when scrolling away from their respective section
       if (sp < 0.12 || sp > 0.42) {
@@ -136,22 +185,18 @@ export default function PixelForest({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Section dots scroll targets
-  const SECTION_SCROLL_TARGETS: Record<string, string> = {
-    hero: '#hero',
-    about: '#about',
-    skills: '#skills',
-    projects: '#projects',
-    contact: '#contact',
-  };
-  const SECTIONS = ['hero', 'about', 'skills', 'projects', 'contact'] as const;
+
 
   return (
     <div ref={containerRef} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 1, pointerEvents: 'auto' }}>
-      <Canvas dpr={[1, 1.5]} eventSource={containerRef as React.RefObject<HTMLElement>} eventPrefix="client">
+      <Canvas 
+        dpr={performanceMode === 'potato' ? [0.5, 0.75] : performanceMode === 'light' ? [1, 1.2] : [1, 1.5]} 
+        eventSource={containerRef as React.RefObject<HTMLElement>} 
+        eventPrefix="client"
+      >
         <color attach="background" args={[cfg.bgColor]} />
         <fog attach="fog" args={[cfg.fogColor, cfg.fogNear, cfg.fogFar]} />
-        <InteractiveFog theme={theme} scrollProgress={scrollProgress} reducedMotion={prefersReducedMotion} isStarted={isStarted} />
+        {performanceMode === 'normal' && <InteractiveFog theme={theme} scrollProgress={scrollProgress} reducedMotion={prefersReducedMotion} isStarted={isStarted} />}
 
         <CameraRig mousePosRef={effectiveRef} scrollProgress={scrollProgress} />
         <SceneController theme={theme} />
@@ -166,22 +211,26 @@ export default function PixelForest({
         </SkyDome>
 
         {/* Clouds - Outside SkyDome so they exhibit parallax scrolling */}
-        <DynamicClouds theme={theme} />
+        {performanceMode !== 'potato' && <DynamicClouds theme={theme} performanceMode={performanceMode} />}
 
         {/* Ground */}
         <Ground theme={theme} />
 
         {/* Nature Waypoint Decorations */}
-        <Campfire position={[-3.5, 0, -13.2]} onClick={() => { setIsAboutOpen(true); }} />
+        <Campfire position={[-3.5, 0, -13.2]} onClick={() => { setIsAboutOpen(true); }} playSfx={playSfx} />
         <WorkshopDecorations position={[2.8, 0, -27.6]} />
-        <Bookshelf position={[4.0, 0, -28.8]} onClick={() => { setIsSkillsOpen(true); }} />
+        <Bookshelf position={[4.0, 0, -28.8]} onClick={() => { setIsSkillsOpen(true); }} playSfx={playSfx} />
         <QuestBoardStand position={[0, 0, -45]} />
 
         {/* Nature */}
-        <Trees theme={theme} />
-        <GroundBushes theme={theme} />
-        <FallingLeaves theme={theme} />
-        <Fireflies theme={theme} />
+        <Trees theme={theme} performanceMode={performanceMode} />
+        {performanceMode !== 'potato' && (
+          <>
+            <GroundBushes theme={theme} performanceMode={performanceMode} />
+            <FallingLeaves theme={theme} performanceMode={performanceMode} />
+            <Fireflies theme={theme} performanceMode={performanceMode} />
+          </>
+        )}
 
         {/* Spatial HTML Overlay Content */}
         <SpatialHTMLUI
@@ -196,11 +245,16 @@ export default function PixelForest({
           setIsAboutOpen={setIsAboutOpen}
           setIsSkillsOpen={setIsSkillsOpen}
           isStarted={isStarted}
+          playSfx={playSfx}
+          onQuestNavigate={onQuestNavigate}
+          performanceMode={performanceMode}
         />
 
-        <EffectComposer multisampling={0}>
-          <Pixelation granularity={5} />
-        </EffectComposer>
+        {performanceMode === 'normal' && (
+          <EffectComposer multisampling={0}>
+            <Pixelation granularity={5} />
+          </EffectComposer>
+        )}
       </Canvas>
 
       {mounted && createPortal(
@@ -219,8 +273,29 @@ export default function PixelForest({
               <div className="modal-containerless-panel">
                 <DialogueBox title="Ferdy Agustian Prasetyo">
                   <div className="about-content" style={{ flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'center' : 'flex-start' }}>
-                    <div style={{ transform: isMobile ? 'scale(0.85)' : 'none', transformOrigin: 'center top', marginBottom: isMobile ? '-1.5rem' : '0' }}>
-                      <InteractiveAvatar />
+                    <div style={{ transform: isMobile ? 'scale(0.85)' : 'none', transformOrigin: 'center top', marginBottom: isMobile ? '-1.5rem' : '0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <InteractiveAvatar isOpen={isAboutOpen} playSfx={playSfx} />
+                      {!isMobile && (
+                        <div className="about-buttons" style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '2rem', width: '100%', padding: '0 10px' }}>
+                          <PixelButton
+                            href="https://github.com/Ferdyagustian"
+                            target="_blank"
+                            rel="noreferrer"
+                            variant="secondary"
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem' }}
+                          >
+                            <span className="pixel-font" style={{ fontSize: '0.6rem' }}>[GH]</span> GitHub
+                          </PixelButton>
+                          <PixelButton
+                            href="https://www.linkedin.com/in/ferdy-agustian-5a3521247/"
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem' }}
+                          >
+                            <span className="pixel-font" style={{ fontSize: '0.6rem' }}>[IN]</span> LinkedIn
+                          </PixelButton>
+                        </div>
+                      )}
                     </div>
                     <div style={{ flex: '1', minWidth: '250px', maxWidth: isMobile ? '100%' : '60ch', paddingLeft: isMobile ? '0' : '2rem', paddingRight: '1rem', maxHeight: isMobile ? '65vh' : '55vh', overflowY: 'auto' }} className="custom-scrollbar-container" data-lenis-prevent="true" onWheel={(e) => e.stopPropagation()}>
                       <p style={{ marginBottom: '1.2rem', fontSize: isMobile ? '1.05rem' : '1.1rem', lineHeight: '1.8' }}>
@@ -235,25 +310,27 @@ export default function PixelForest({
                       <p style={{ marginBottom: '1.5rem', fontSize: '1.1rem', lineHeight: '1.7', color: 'rgba(255, 255, 255, 0.85)' }}>
                         <em style={{ borderLeft: '3px solid #ffd700', paddingLeft: '10px', display: 'block' }}>I believe that the best products are built at the intersection of innovative algorithms and meticulous engineering. </em>
                       </p>
-                      <div className="about-buttons" style={{ display: 'flex', gap: '1rem', marginTop: '2rem', flexWrap: 'wrap' }}>
-                        <PixelButton
-                          href="https://github.com/Ferdyagustian"
-                          target="_blank"
-                          rel="noreferrer"
-                          variant="secondary"
-                          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                        >
-                          <span className="pixel-font" style={{ fontSize: '0.6rem' }}>[GH]</span> GitHub
-                        </PixelButton>
-                        <PixelButton
-                          href="https://www.linkedin.com/in/ferdy-agustian-5a3521247/"
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                        >
-                          <span className="pixel-font" style={{ fontSize: '0.6rem' }}>[IN]</span> LinkedIn
-                        </PixelButton>
-                      </div>
+                      {isMobile && (
+                        <div className="about-buttons" style={{ display: 'flex', gap: '1rem', marginTop: '2rem', flexWrap: 'wrap' }}>
+                          <PixelButton
+                            href="https://github.com/Ferdyagustian"
+                            target="_blank"
+                            rel="noreferrer"
+                            variant="secondary"
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                          >
+                            <span className="pixel-font" style={{ fontSize: '0.6rem' }}>[GH]</span> GitHub
+                          </PixelButton>
+                          <PixelButton
+                            href="https://www.linkedin.com/in/ferdy-agustian-5a3521247/"
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                          >
+                            <span className="pixel-font" style={{ fontSize: '0.6rem' }}>[IN]</span> LinkedIn
+                          </PixelButton>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </DialogueBox>
@@ -320,13 +397,14 @@ export default function PixelForest({
 
           {/* Section Progress Dots — vertical pills on right side */}
           <nav
+            ref={sectionDotsRef}
             className={`section-progress-dots ${(isAboutOpen || isSkillsOpen) ? 'hidden' : ''}`}
             aria-label="Section navigation"
           >
             {SECTIONS.map((sec) => (
               <button
                 key={sec}
-                className={`section-dot-btn ${activeSection === sec ? 'active' : ''}`}
+                className={`section-dot-btn ${sec === 'hero' ? 'active' : ''}`}
                 onClick={() => {
                   const el = document.querySelector(SECTION_SCROLL_TARGETS[sec]);
                   el?.scrollIntoView({ behavior: 'smooth' });
@@ -339,7 +417,8 @@ export default function PixelForest({
 
           {/* Scroll-to-Top Button */}
           <button
-            className={`scroll-to-top-btn pixel-font ${showScrollToTop ? 'visible' : ''}`}
+            ref={scrollToTopBtnRef}
+            className="scroll-to-top-btn pixel-font"
             onClick={handleScrollToTop}
             aria-label="Scroll back to top"
             title="Back to Top"
@@ -347,7 +426,10 @@ export default function PixelForest({
             ▲
           </button>
 
-          <LoadingScreen onStart={() => setIsStarted(true)} />
+          <LoadingScreen onStart={(mode) => {
+            setIsStarted(true);
+            setPerformanceMode(mode);
+          }} />
         </>
         , document.body)}
     </div>

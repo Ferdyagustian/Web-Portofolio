@@ -5,13 +5,20 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 /* ===== RPG 3D Campfire Anchor ===== */
-export function Campfire({ position, onClick }: { position: [number, number, number]; onClick?: (e: any) => void }) {
+export function Campfire({ position, onClick, playSfx }: { position: [number, number, number]; onClick?: (e: any) => void; playSfx?: any }) {
   const groupRef = useRef<THREE.Group>(null);
   const flame1 = useRef<THREE.Mesh>(null);
   const flame2 = useRef<THREE.Mesh>(null);
   const flame3 = useRef<THREE.Mesh>(null);
   const _scaleVec3 = useRef(new THREE.Vector3(1, 1, 1));
   const [hovered, setHovered] = React.useState(false);
+  
+  const handleClick = (e: any) => {
+    if (onClick) {
+      if (playSfx) playSfx('campfire');
+      onClick(e);
+    }
+  };
 
   useEffect(() => {
     if (onClick) {
@@ -44,7 +51,7 @@ export function Campfire({ position, onClick }: { position: [number, number, num
     <group
       ref={groupRef}
       position={position}
-      onClick={onClick}
+      onClick={onClick ? handleClick : undefined}
       onPointerOver={onClick ? (e) => { e.stopPropagation(); setHovered(true); } : undefined}
       onPointerOut={onClick ? () => setHovered(false) : undefined}
     >
@@ -150,10 +157,17 @@ export function WorkshopDecorations({ position }: { position: [number, number, n
 }
 
 /* ===== RPG 3D Bookshelf Anchor ===== */
-export function Bookshelf({ position, onClick }: { position: [number, number, number]; onClick?: (e: any) => void }) {
+export function Bookshelf({ position, onClick, playSfx }: { position: [number, number, number]; onClick?: (e: any) => void; playSfx?: any }) {
   const groupRef = useRef<THREE.Group>(null);
   const _scaleVec3 = useRef(new THREE.Vector3(1, 1, 1));
   const [hovered, setHovered] = React.useState(false);
+
+  const handleClick = (e: any) => {
+    if (onClick) {
+      if (playSfx) playSfx('page_flip');
+      onClick(e);
+    }
+  };
 
   useEffect(() => {
     if (onClick) {
@@ -173,7 +187,7 @@ export function Bookshelf({ position, onClick }: { position: [number, number, nu
     <group
       ref={groupRef}
       position={position}
-      onClick={onClick}
+      onClick={onClick ? handleClick : undefined}
       onPointerOver={onClick ? (e) => { e.stopPropagation(); setHovered(true); } : undefined}
       onPointerOut={onClick ? () => setHovered(false) : undefined}
     >

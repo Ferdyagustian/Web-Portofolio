@@ -9,8 +9,8 @@ import { THEME_CONFIGS } from '../../../lib/themeConfig';
 import { LERP_SPEED, lerpColor, lerpNum } from './utils';
 
 /* ===== Trees ===== */
-export function Trees({ theme }: { theme: TimeTheme }) {
-  const treeCount = 35; // Reduced from 50
+export function Trees({ theme, performanceMode = 'normal' }: { theme: TimeTheme, performanceMode?: 'normal' | 'light' | 'potato' }) {
+  const treeCount = performanceMode === 'potato' ? 15 : 35; // Reduced from 50
   const configRef = useRef(THEME_CONFIGS[theme]);
   const trunkMatRef = useRef<THREE.MeshStandardMaterial>(null);
   const leavesMatRef = useRef<THREE.MeshStandardMaterial>(null);
@@ -25,7 +25,7 @@ export function Trees({ theme }: { theme: TimeTheme }) {
 
   const positions = useMemo(() => {
     const pos = [];
-    const minDistance = 4; // Safe distance from interactive objects
+    const minDistance = 3.4; // Safe distance from interactive objects
     let attempts = 0;
 
     while (pos.length < treeCount && attempts < 1000) {
@@ -47,13 +47,12 @@ export function Trees({ theme }: { theme: TimeTheme }) {
       pos.push({ x, z });
     }
 
-    // Fallback in case of safe path starvation
     while (pos.length < treeCount) {
       pos.push({ x: (Math.random() > 0.5 ? 8 : -8), z: -Math.random() * 60 });
     }
 
     return pos;
-  }, []);
+  }, [treeCount]);
 
   useFrame(() => {
     if (trunkMatRef.current) lerpColor(trunkMatRef.current.color, targetTrunkColor.current, LERP_SPEED);
@@ -80,9 +79,9 @@ export function Trees({ theme }: { theme: TimeTheme }) {
   );
 }
 
-/* ===== Ground Bushes ===== */
-export function GroundBushes({ theme }: { theme: TimeTheme }) {
-  const count = 50;
+/* ===== Ground Bushes (Scattered) ===== */
+export function GroundBushes({ theme, performanceMode = 'normal' }: { theme: TimeTheme, performanceMode?: 'normal' | 'light' | 'potato' }) {
+  const count = performanceMode === 'potato' ? 0 : 25;
   const matRef = useRef<THREE.MeshStandardMaterial>(null);
   const configRef = useRef(THEME_CONFIGS[theme]);
   const targetBushColor = useRef(new THREE.Color(THEME_CONFIGS[theme].bushColor));
@@ -147,7 +146,7 @@ export function GroundBushes({ theme }: { theme: TimeTheme }) {
 }
 
 /* ===== Falling Leaves ===== */
-export function FallingLeaves({ theme }: { theme: TimeTheme }) {
+export function FallingLeaves({ theme, performanceMode = 'normal' }: { theme: TimeTheme, performanceMode?: 'normal' | 'light' | 'potato' }) {
   const count = 100; // Reduced from 150
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const matRef = useRef<THREE.MeshLambertMaterial>(null);
@@ -208,7 +207,7 @@ export function FallingLeaves({ theme }: { theme: TimeTheme }) {
 }
 
 /* ===== Fireflies ===== */
-export function Fireflies({ theme }: { theme: TimeTheme }) {
+export function Fireflies({ theme, performanceMode = 'normal' }: { theme: TimeTheme, performanceMode?: 'normal' | 'light' | 'potato' }) {
   const count = 50;
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const matRef = useRef<THREE.MeshBasicMaterial>(null);

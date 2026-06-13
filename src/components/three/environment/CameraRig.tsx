@@ -18,6 +18,7 @@ export function CameraRig({
 
   // Cache isMobile in a ref — updated only on resize, NOT every frame
   const isMobileRef = useRef(size.width < 768);
+  const snapFrames = useRef(5);
 
   useEffect(() => {
     const handleResize = () => {
@@ -44,12 +45,18 @@ export function CameraRig({
     const finalRotX = target.rot[0] + (-mp.y * 0.15);
     const finalRotY = target.rot[1] + (mp.x * 0.15);
 
-    cameraGroup.current.position.x = THREE.MathUtils.lerp(cameraGroup.current.position.x, finalPosX, 0.05);
-    cameraGroup.current.position.y = THREE.MathUtils.lerp(cameraGroup.current.position.y, finalPosY, 0.05);
-    cameraGroup.current.position.z = THREE.MathUtils.lerp(cameraGroup.current.position.z, finalPosZ, 0.05);
+    if (snapFrames.current > 0) {
+      cameraGroup.current.position.set(finalPosX, finalPosY, finalPosZ);
+      cameraGroup.current.rotation.set(finalRotX, finalRotY, 0);
+      snapFrames.current--;
+    } else {
+      cameraGroup.current.position.x = THREE.MathUtils.lerp(cameraGroup.current.position.x, finalPosX, 0.05);
+      cameraGroup.current.position.y = THREE.MathUtils.lerp(cameraGroup.current.position.y, finalPosY, 0.05);
+      cameraGroup.current.position.z = THREE.MathUtils.lerp(cameraGroup.current.position.z, finalPosZ, 0.05);
 
-    cameraGroup.current.rotation.x = THREE.MathUtils.lerp(cameraGroup.current.rotation.x, finalRotX, 0.05);
-    cameraGroup.current.rotation.y = THREE.MathUtils.lerp(cameraGroup.current.rotation.y, finalRotY, 0.05);
+      cameraGroup.current.rotation.x = THREE.MathUtils.lerp(cameraGroup.current.rotation.x, finalRotX, 0.05);
+      cameraGroup.current.rotation.y = THREE.MathUtils.lerp(cameraGroup.current.rotation.y, finalRotY, 0.05);
+    }
   });
 
   return (

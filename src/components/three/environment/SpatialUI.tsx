@@ -21,6 +21,9 @@ export function SpatialHTMLUI({
   setIsAboutOpen,
   setIsSkillsOpen,
   isStarted,
+  playSfx,
+  onQuestNavigate,
+  performanceMode,
 }: {
   scrollProgress: React.RefObject<number>;
   formData: any;
@@ -33,6 +36,9 @@ export function SpatialHTMLUI({
   setIsAboutOpen: (val: boolean) => void;
   setIsSkillsOpen: (val: boolean) => void;
   isStarted?: boolean;
+  playSfx?: any;
+  onQuestNavigate?: (slug: string) => void;
+  performanceMode?: 'normal' | 'light' | 'potato';
 }) {
   const heroHtmlRef = useRef<HTMLDivElement>(null);
   const aboutPromptRef = useRef<HTMLDivElement>(null);
@@ -64,10 +70,8 @@ export function SpatialHTMLUI({
       if (!ref.current) return;
       ref.current.style.opacity = opacity.toString();
       if (opacity <= 0.01) {
-        ref.current.style.visibility = 'hidden';
         ref.current.style.pointerEvents = 'none';
       } else {
-        ref.current.style.visibility = 'visible';
         ref.current.style.pointerEvents = 'auto';
       }
     };
@@ -100,7 +104,7 @@ export function SpatialHTMLUI({
         transform
         pointerEvents="auto"
         position={[0, 1.8, 1]}
-        distanceFactor={isMobile ? 2.0 : 3.5}
+        distanceFactor={isMobile ? 3.8 : 3.5}
         zIndexRange={[100, 101]}
       >
         <div ref={heroHtmlRef} className="hero-box-billboard" style={{ transition: 'opacity 0.2s', width: isMobile ? '320px' : '480px', pointerEvents: 'auto' }}>
@@ -112,29 +116,60 @@ export function SpatialHTMLUI({
               animation: isStarted ? 'slideUpAction 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both' : 'none'
             }}
           >
-            <div className="wave-text-wrapper">
-              <h1 className="hero-title" style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-                {"FERDY AGUSTIAN".split(' ').map((word, wIdx) => (
-                  <span key={wIdx} style={{ display: 'flex' }}>
-                    {word.split('').map((char, index) => {
-                      const letterIndex = wIdx === 0 ? index : 6 + index; // offset by length of first word plus space
-                      return (
-                        <span
-                          key={index}
-                          className="pixel-font wave-letter"
-                          style={{ animationDelay: `${letterIndex * 0.05}s` }}
-                        >
-                          {char}
-                        </span>
-                      );
-                    })}
-                  </span>
-                ))}
-              </h1>
-            </div>
-            <p className="vt323-font hero-subtitle">
-              AI Enthusiast &nbsp;|&nbsp; CS UnderGraduate Student
-            </p>
+            {isMobile ? (
+              <>
+                <div className="wave-text-wrapper">
+                  <h1 className="hero-title" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '0.2rem' }}>
+                    {"FERDY AGUSTIAN".split(' ').map((word, wIdx) => (
+                      <span key={wIdx} style={{ display: 'flex' }}>
+                        {word.split('').map((char, index) => {
+                          const letterIndex = wIdx === 0 ? index : 6 + index;
+                          return (
+                            <span
+                              key={index}
+                              className={`pixel-font ${performanceMode !== 'potato' ? 'wave-letter' : ''}`}
+                              style={{ animationDelay: `${letterIndex * 0.05}s` }}
+                            >
+                              {char}
+                            </span>
+                          );
+                        })}
+                      </span>
+                    ))}
+                  </h1>
+                </div>
+                <div className="vt323-font hero-subtitle" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '0.4rem' }}>
+                  <span>AI Enthusiast</span>
+                  <span>CS UnderGraduate Student</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="wave-text-wrapper">
+                  <h1 className="hero-title" style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+                    {"FERDY AGUSTIAN".split(' ').map((word, wIdx) => (
+                      <span key={wIdx} style={{ display: 'flex' }}>
+                        {word.split('').map((char, index) => {
+                          const letterIndex = wIdx === 0 ? index : 6 + index;
+                          return (
+                            <span
+                              key={index}
+                              className={`pixel-font ${performanceMode !== 'potato' ? 'wave-letter' : ''}`}
+                              style={{ animationDelay: `${letterIndex * 0.05}s` }}
+                            >
+                              {char}
+                            </span>
+                          );
+                        })}
+                      </span>
+                    ))}
+                  </h1>
+                </div>
+                <p className="vt323-font hero-subtitle">
+                  AI Enthusiast &nbsp;|&nbsp; CS UnderGraduate Student
+                </p>
+              </>
+            )}
           </div>
           <div className="hero-scroll-arrow" style={{
             marginTop: '1.5rem',
@@ -155,27 +190,26 @@ export function SpatialHTMLUI({
         distanceFactor={3.5}
         zIndexRange={[110, 111]}
       >
-        <div
-          ref={aboutPromptRef}
-          className="pixel-font"
-          style={{
-            transition: 'opacity 0.2s',
-            backgroundColor: 'rgba(10, 5, 2, 0.9)',
-            color: '#ffbe5c',
-            padding: '6px 14px',
-            border: '2px solid #e67e22',
-            boxShadow: '4px 4px 0px rgba(0,0,0,0.6)',
-            fontSize: '0.55rem',
-            textAlign: 'center',
-            whiteSpace: 'nowrap',
-            letterSpacing: '1px',
-            animation: 'gachaBlinkPulse 1.4s ease-in-out infinite',
-            userSelect: 'none',
-            // Non-interactive: purely a visual hint. Click is handled by the 3D Campfire object.
-            pointerEvents: 'none',
-          }}
-        >
-          ✦ KLIK API UNGGUN UNTUK MELIHAT ABOUT ✦
+        <div ref={aboutPromptRef} style={{ transition: 'opacity 0.2s', pointerEvents: 'none' }}>
+          <div
+            className="pixel-font"
+            style={{
+              backgroundColor: 'rgba(10, 5, 2, 0.9)',
+              color: '#ffbe5c',
+              padding: '6px 14px',
+              border: '2px solid #e67e22',
+              boxShadow: '4px 4px 0px rgba(0,0,0,0.6)',
+              fontSize: '0.55rem',
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              letterSpacing: '1px',
+              animation: 'gachaBlinkPulse 1.4s ease-in-out infinite',
+              userSelect: 'none',
+              pointerEvents: 'none',
+            }}
+          >
+            ✦ KLIK API UNGGUN UNTUK MELIHAT ABOUT ✦
+          </div>
         </div>
       </Html>
 
@@ -186,27 +220,26 @@ export function SpatialHTMLUI({
         distanceFactor={3.5}
         zIndexRange={[110, 111]}
       >
-        <div
-          ref={skillsPromptRef}
-          className="pixel-font"
-          style={{
-            transition: 'opacity 0.2s',
-            backgroundColor: 'rgba(5, 10, 8, 0.95)',
-            color: '#7dffb3',
-            padding: '6px 14px',
-            border: '2px solid #4ade80',
-            boxShadow: '4px 4px 0px rgba(0,0,0,0.6)',
-            fontSize: '0.55rem',
-            textAlign: 'center',
-            whiteSpace: 'nowrap',
-            letterSpacing: '1px',
-            animation: 'gachaBlinkPulse 1.4s ease-in-out infinite',
-            userSelect: 'none',
-            // Non-interactive: purely a visual hint. Click is handled by the 3D Bookshelf object.
-            pointerEvents: 'none',
-          }}
-        >
-          ✦ KLIK RAK BUKU UNTUK MELIHAT SKILL ✦
+        <div ref={skillsPromptRef} style={{ transition: 'opacity 0.2s', pointerEvents: 'none' }}>
+          <div
+            className="pixel-font"
+            style={{
+              backgroundColor: 'rgba(5, 10, 8, 0.95)',
+              color: '#7dffb3',
+              padding: '6px 14px',
+              border: '2px solid #4ade80',
+              boxShadow: '4px 4px 0px rgba(0,0,0,0.6)',
+              fontSize: '0.55rem',
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              letterSpacing: '1px',
+              animation: 'gachaBlinkPulse 1.4s ease-in-out infinite',
+              userSelect: 'none',
+              pointerEvents: 'none',
+            }}
+          >
+            ✦ KLIK RAK BUKU UNTUK MELIHAT SKILL ✦
+          </div>
         </div>
       </Html>
 
@@ -229,7 +262,7 @@ export function SpatialHTMLUI({
             alignItems: 'center'
           }}
         >
-          <ProjectGallery />
+          <ProjectGallery playSfx={playSfx} onQuestNavigate={onQuestNavigate} />
         </div>
       </Html>
 

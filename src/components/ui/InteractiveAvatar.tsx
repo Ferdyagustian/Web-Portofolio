@@ -6,32 +6,99 @@ import { createPortal } from "react-dom";
 import Avatar3DCanvas from "../three/Avatar3DCanvas";
 import PixelButton from "./PixelButton";
 
-export default function InteractiveAvatar() {
+export default function InteractiveAvatar({ isOpen, playSfx }: { isOpen?: boolean; playSfx?: any }) {
+  const GACHA_IMAGES = [
+    '/gacha/meme1.jpg',
+    '/gacha/meme2.jpg',
+    '/gacha/meme3.jpg',
+    '/gacha/meme4.jpg',
+    '/gacha/meme5.jpg'
+  ];
+
   const [is3DModalOpen, setIs3DModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [bgImage, setBgImage] = useState<string>('');
+  const [isRolling, setIsRolling] = useState(false);
+
+  // Fungsi untuk mendapatkan gambar acak yang pasti berbeda
+  const getRandomDifferentImage = (current: string) => {
+    if (GACHA_IMAGES.length <= 1) return GACHA_IMAGES[0] || '';
+    let newImg;
+    do {
+      newImg = GACHA_IMAGES[Math.floor(Math.random() * GACHA_IMAGES.length)];
+    } while (newImg === current);
+    return newImg;
+  };
 
   useEffect(() => {
     setMounted(true);
+    // Inisialisasi awal
+    setBgImage(GACHA_IMAGES[Math.floor(Math.random() * GACHA_IMAGES.length)]);
   }, []);
+
+  // Effect yang bereaksi setiap kali modal About dibuka
+  useEffect(() => {
+    if (isOpen) {
+      setBgImage(prev => getRandomDifferentImage(prev));
+    }
+  }, [isOpen]);
+
+  const handleGachaRoll = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Mencegah modal 3D terbuka
+    if (isRolling) return;
+    
+    setIsRolling(true);
+    let rolls = 0;
+    const maxRolls = 20; // Jumlah putaran gambar
+    let currentImg = bgImage;
+    
+    // Play rolling sound
+    if (playSfx) playSfx('gacha_roll');
+    
+    const interval = setInterval(() => {
+      let randomImg = getRandomDifferentImage(currentImg);
+      
+      currentImg = randomImg;
+      setBgImage(currentImg);
+      rolls++;
+      
+      // Saat putaran selesai
+      if (rolls >= maxRolls) {
+        clearInterval(interval);
+        setIsRolling(false);
+        if (playSfx) playSfx('gacha_result');
+      }
+    }, 80); // Kecepatan ganti gambar (80ms)
+  };
 
   return (
     <>
       <div 
-        className="about-avatar-interactive"
-        onClick={() => setIs3DModalOpen(true)}
+        className={`about-avatar-interactive ${isRolling ? 'rolling' : ''}`}
+        onClick={() => {
+          if (!isRolling) {
+            if (playSfx) playSfx('gacha_result');
+            setIs3DModalOpen(true);
+          }
+        }}
         style={{
           width: '140px', flexShrink: 0,
           backgroundColor: 'var(--color-moss-green)',
+          backgroundImage: bgImage ? `url(${bgImage})` : 'none',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
           border: '4px solid var(--color-forest-dark)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column',
           boxShadow: '4px 4px 0px rgba(0,0,0,0.5)',
           overflow: 'hidden',
-          cursor: 'pointer',
+          cursor: isRolling ? 'wait' : 'pointer',
           transition: 'transform 0.2s ease, box-shadow 0.2s ease',
           zIndex: 2,
           position: 'relative',
         }}
         onMouseEnter={(e) => {
+          if (isRolling) return;
+          if (playSfx) playSfx('gacha_roll');
           e.currentTarget.style.animation = 'scaredShake 0.3s infinite';
           e.currentTarget.style.boxShadow = '8px 12px 0px rgba(0,0,0,0.4)';
         }}
@@ -41,33 +108,47 @@ export default function InteractiveAvatar() {
           e.currentTarget.style.boxShadow = '4px 4px 0px rgba(0,0,0,0.5)';
         }}
       >
-        <Image 
-          src="/pixel_avatar_profile.png" 
-          width={140} 
-          height={140} 
-          style={{ imageRendering: 'pixelated', objectFit: 'cover', display: 'block' }} 
-          alt="Ferdy Agustian" 
-          priority
-        />
+        {/* Avatar Karakter - Sedikit transparan jika sedang rolling agar background lebih terlihat */}
+        <div style={{ opacity: isRolling ? 0.8 : 1, transition: 'opacity 0.1s', display: 'flex' }}>
+          <Image 
+            src="/pixel_avatar_profile.png" 
+            width={140} 
+            height={140} 
+            style={{ imageRendering: 'pixelated', objectFit: 'cover', display: 'block' }} 
+            alt="Ferdy Agustian" 
+            priority
+          />
+        </div>
         {/* Gacha click label */}
-        <div style={{
-          width: '100%',
-          background: 'rgba(0,0,0,0.75)',
-          borderTop: '2px solid var(--color-moss-green)',
-          textAlign: 'center',
-          padding: '4px 2px',
-          flexShrink: 0,
-        }}>
+        <div 
+          onClick={(e) => {
+            if (playSfx) playSfx('click');
+            handleGachaRoll(e);
+          }}
+          style={{
+            width: '100%',
+            background: isRolling ? '#ffd700' : '#0a0f0d', // Solid colors to prevent image bleed-through
+            borderTop: '2px solid var(--color-moss-green)',
+            textAlign: 'center',
+            padding: '4px 2px',
+            flexShrink: 0,
+            cursor: 'pointer',
+            transition: 'background 0.2s',
+          }}
+        >
           <span style={{
             fontFamily: 'var(--font-pixelify), monospace',
             fontSize: '0.48rem',
-            color: '#7dffb3',
+            color: isRolling ? '#000' : '#7dffb3',
+            fontWeight: isRolling ? 'bold' : 'normal',
             letterSpacing: '0.05em',
-            textShadow: '0 0 6px #4ade80',
-            animation: 'gachaBlinkPulse 1.4s ease-in-out infinite',
+            textShadow: isRolling ? 'none' : '0 0 6px #4ade80',
+            animation: isRolling ? 'none' : 'gachaBlinkPulse 1.4s ease-in-out infinite',
             display: 'inline-block',
             whiteSpace: 'nowrap',
-          }}>✦ KLIK UNTUK GACHA ✦</span>
+          }}>
+            {isRolling ? 'ROLLING...' : '✦ KLIK UNTUK GACHA ✦'}
+          </span>
         </div>
       </div>
 
@@ -100,7 +181,7 @@ export default function InteractiveAvatar() {
           </div>
 
           <div style={{ width: '100%', height: '80%', position: 'relative' }}>
-            <Avatar3DCanvas />
+            <Avatar3DCanvas backTextureUrl={bgImage} />
           </div>
 
           <style dangerouslySetInnerHTML={{

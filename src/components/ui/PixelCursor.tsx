@@ -13,15 +13,15 @@ export default function PixelCursor() {
     const xTo = gsap.quickTo(cursorRef.current, "x", { duration: 0.1, ease: "power3" });
     const yTo = gsap.quickTo(cursorRef.current, "y", { duration: 0.1, ease: "power3" });
 
-    const onMouseMove = (e: MouseEvent) => {
+    const onPointerMove = (e: PointerEvent) => {
       xTo(e.clientX - 10); // Center the 20x20 cursor
       yTo(e.clientY - 10);
     };
 
-    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("pointermove", onPointerMove);
 
     return () => {
-      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("pointermove", onPointerMove);
     };
   }, []);
 

@@ -297,7 +297,7 @@ export function CelestialBody({ theme }: { theme: TimeTheme }) {
 }
 
 /* ===== Clouds ===== */
-export function DynamicClouds({ theme }: { theme: TimeTheme }) {
+export function DynamicClouds({ theme, performanceMode = 'normal' }: { theme: TimeTheme, performanceMode?: 'normal' | 'light' | 'potato' }) {
   const configRef = useRef(THEME_CONFIGS[theme]);
   const groupRef = useRef<THREE.Group>(null);
   const currentOpacity = useRef(THEME_CONFIGS[theme].cloudOpacity);

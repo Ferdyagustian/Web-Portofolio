@@ -1,12 +1,15 @@
 "use client";
 
 import { useMemo } from "react";
+import { Difficulty, QuestStatus, getDifficultyColor, getStatusDisplay } from "../../lib/questData";
 
 interface SignboardProps {
   title: string;
   techStack: string[];
   description: string;
   index: number;
+  difficulty: Difficulty;
+  status: QuestStatus;
   githubUrl?: string;
   liveUrl?: string;
   isHovered: boolean;
@@ -32,8 +35,8 @@ export default function ProjectSignboard({
   techStack,
   description,
   index,
-  githubUrl,
-  liveUrl,
+  difficulty,
+  status,
   isHovered,
   onHover,
   onLeave,
@@ -207,7 +210,7 @@ export default function ProjectSignboard({
           }}
         />
 
-        {/* Project Number — handwritten feel */}
+        {/* Project Number */}
         <div
           className="pixel-font"
           style={{
@@ -215,9 +218,25 @@ export default function ProjectSignboard({
             color: "rgba(0,0,0,0.35)",
             marginBottom: "8px",
             letterSpacing: "1px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
-          #{String(index + 1).padStart(2, "0")}
+          <span>#{String(index + 1).padStart(2, "0")}</span>
+          {/* Status badge */}
+          <span
+            style={{
+              fontSize: "0.45rem",
+              padding: "2px 5px",
+              backgroundColor: getStatusDisplay(status).color + "22",
+              color: getStatusDisplay(status).color,
+              border: `1px solid ${getStatusDisplay(status).color}55`,
+              letterSpacing: "0.5px",
+            }}
+          >
+            {getStatusDisplay(status).label}
+          </span>
         </div>
 
         {/* Title */}
@@ -254,7 +273,7 @@ export default function ProjectSignboard({
           {description}
         </div>
 
-        {/* Tech Stack Tags — pill style */}
+        {/* Tech Stack Tags */}
         <div
           style={{
             display: "flex",
@@ -283,60 +302,39 @@ export default function ProjectSignboard({
           ))}
         </div>
 
-        {/* Links — only on hover */}
-        {isHovered && (githubUrl || liveUrl) && (
+        {/* Difficulty dots */}
+        <div style={{ display: "flex", gap: "3px", marginTop: "10px", alignItems: "center" }}>
+          <span className="pixel-font" style={{ fontSize: "0.45rem", color: "rgba(0,0,0,0.4)", marginRight: "4px", letterSpacing: "0.5px" }}>DIFFICULTY</span>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              style={{
+                width: "8px",
+                height: "8px",
+                backgroundColor: i < difficulty
+                  ? getDifficultyColor(difficulty)
+                  : "rgba(0,0,0,0.12)",
+                border: "1px solid rgba(0,0,0,0.15)",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Click hint — only on hover */}
+        {isHovered && (
           <div
+            className="pixel-font"
             style={{
-              display: "flex",
-              gap: "8px",
-              marginTop: "12px",
-              position: "relative",
-              zIndex: 2,
-              animation: "fadeInUp 0.3s ease",
+              marginTop: "10px",
+              fontSize: "0.5rem",
+              color: "#2d5a27",
+              textAlign: "center",
+              letterSpacing: "1px",
+              opacity: 0.8,
+              animation: "fadeInUp 0.25s ease",
             }}
           >
-            {githubUrl && (
-              <a
-                href={githubUrl}
-                target="_blank"
-                rel="noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="pixel-font project-link-btn"
-                style={{
-                  fontSize: "0.7rem",
-                  padding: "4px 10px",
-                  backgroundColor: "#1a1a2e",
-                  color: "#fbf8cc",
-                  border: "2px solid #fbf8cc",
-                  textDecoration: "none",
-                  cursor: "pointer",
-                  transition: "background-color 0.2s",
-                }}
-              >
-                [GITHUB]
-              </a>
-            )}
-            {liveUrl && (
-              <a
-                href={liveUrl}
-                target="_blank"
-                rel="noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="pixel-font project-link-btn"
-                style={{
-                  fontSize: "0.7rem",
-                  padding: "4px 10px",
-                  backgroundColor: "#2d5a27",
-                  color: "#fbf8cc",
-                  border: "2px solid #fbf8cc",
-                  textDecoration: "none",
-                  cursor: "pointer",
-                  transition: "background-color 0.2s",
-                }}
-              >
-                [LIVE]
-              </a>
-            )}
+            ▶ KLIK UNTUK ACCEPT QUEST
           </div>
         )}
       </div>

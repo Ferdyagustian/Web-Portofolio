@@ -3,20 +3,14 @@
 import { useRef, useState, useMemo, useEffect } from "react";
 import { Move } from "lucide-react";
 import ProjectSignboard from "./ProjectSignboard";
-
-interface Project {
-  title: string;
-  description: string;
-  tech_stack: string[];
-  github_url?: string;
-  live_url?: string;
-}
+import { Project } from "../../lib/questData";
 
 interface ProjectMapProps {
   projects: Project[];
+  onSelectProject: (project: Project) => void;
 }
 
-export default function ProjectMap({ projects }: ProjectMapProps) {
+export default function ProjectMap({ projects, onSelectProject }: ProjectMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const bgRef = useRef<HTMLDivElement>(null);
@@ -52,7 +46,7 @@ export default function ProjectMap({ projects }: ProjectMapProps) {
     const onPointerDown = (e: PointerEvent) => {
       // Only main mouse button or touch
       if (e.button !== undefined && e.button !== 0) return;
-      container.setPointerCapture(e.pointerId);
+      // DO NOT setPointerCapture here, as it swallows pointerup events for child elements, preventing onClick from firing on notes.
       dragState.current = {
         active: true,
         startX: e.clientX,
@@ -60,47 +54,76 @@ export default function ProjectMap({ projects }: ProjectMapProps) {
         startPanX: panPos.current.x,
         startPanY: panPos.current.y,
       };
+      // Do not set isCursorGrabbing to true here, wait for pointermove threshold
       container.style.cursor = "grabbing";
-      isCursorGrabbing.current = true;
       setShowHint(false);
     };
 
+    const PAN_CLAMP = 700; // max px user can drag from center
     const onPointerMove = (e: PointerEvent) => {
       if (!dragState.current.active) return;
       const dx = e.clientX - dragState.current.startX;
       const dy = e.clientY - dragState.current.startY;
-      const newX = dragState.current.startPanX + dx;
-      const newY = dragState.current.startPanY + dy;
-      // Store final position
+      
+      // Smart Capture: If moved more than 3px, lock the pointer to the container.
+      // This prevents the drag from stopping if the cursor leaves the window bounds,
+      // but still allows standard "click" events to pass through to the notes if we don't drag.
+      if (!isCursorGrabbing.current && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
+        try { container.setPointerCapture(e.pointerId); } catch(err) {}
+        isCursorGrabbing.current = true;
+      }
+
+      const rawX = dragState.current.startPanX + dx;
+      const rawY = dragState.current.startPanY + dy;
+      // Clamp so notes are always reachable
+      const newX = Math.max(-PAN_CLAMP, Math.min(PAN_CLAMP, rawX));
+      const newY = Math.max(-PAN_CLAMP, Math.min(PAN_CLAMP, rawY));
       panPos.current = { x: newX, y: newY };
-      // Write directly to DOM — zero React involvement
       applyTransform(newX, newY);
     };
 
     const onPointerUp = (e: PointerEvent) => {
       if (!dragState.current.active) return;
       dragState.current.active = false;
-      container.releasePointerCapture(e.pointerId);
+      if (isCursorGrabbing.current) {
+        try { container.releasePointerCapture(e.pointerId); } catch(err) {}
+      }
       container.style.cursor = "grab";
       isCursorGrabbing.current = false;
       // panPos.current is already the final position — nothing to update
     };
 
-    const onPointerCancel = () => {
+    const onPointerCancel = (e: PointerEvent) => {
       dragState.current.active = false;
+      if (isCursorGrabbing.current) {
+        try { container.releasePointerCapture(e.pointerId); } catch(err) {}
+      }
       container.style.cursor = "grab";
+      isCursorGrabbing.current = false;
+    };
+
+    const onClickCapture = (e: MouseEvent) => {
+      // Prevent click if user dragged more than 5 pixels
+      const dx = Math.abs(e.clientX - dragState.current.startX);
+      const dy = Math.abs(e.clientY - dragState.current.startY);
+      if (dx > 5 || dy > 5) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
     };
 
     container.addEventListener("pointerdown", onPointerDown);
     container.addEventListener("pointermove", onPointerMove);
     container.addEventListener("pointerup", onPointerUp);
     container.addEventListener("pointercancel", onPointerCancel);
+    container.addEventListener("click", onClickCapture, true);
 
     return () => {
       container.removeEventListener("pointerdown", onPointerDown);
       container.removeEventListener("pointermove", onPointerMove);
       container.removeEventListener("pointerup", onPointerUp);
       container.removeEventListener("pointercancel", onPointerCancel);
+      container.removeEventListener("click", onClickCapture, true);
     };
   }, []);
 
@@ -336,12 +359,14 @@ export default function ProjectMap({ projects }: ProjectMapProps) {
               description={project.description}
               techStack={project.tech_stack}
               index={i}
+              difficulty={project.difficulty}
+              status={project.status}
               githubUrl={project.github_url}
               liveUrl={project.live_url}
               isHovered={hoveredIndex === i}
               onHover={() => setHoveredIndex(i)}
               onLeave={() => setHoveredIndex(null)}
-              onClick={() => {}}
+              onClick={() => onSelectProject(project)}
             />
           </div>
         ))}

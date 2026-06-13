@@ -5,13 +5,13 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 
-function Card3D() {
+function Card3D({ backTextureUrl }: { backTextureUrl: string }) {
   const meshRef = useRef<THREE.Mesh>(null);
 
   // Muat kedua tekstur
   const [frontTexture, backTexture] = useTexture([
     '/pixel_avatar_profile.png',
-    '/monkey.jpg'
+    backTextureUrl
   ]);
 
   // Agar pixel art tidak buram (NearestFilter)
@@ -45,7 +45,10 @@ const LoadingText = () => {
   );
 };
 
-export default function Avatar3DCanvas() {
+export default function Avatar3DCanvas({ backTextureUrl }: { backTextureUrl?: string }) {
+  // Gunakan fallback ke meme1.jpg jika tidak ada URL yang diberikan
+  const safeTextureUrl = backTextureUrl || '/gacha/meme1.jpg';
+
   return (
     <div style={{ width: '100%', height: '100%' }}>
       <Canvas camera={{ position: [0, 0, 7], fov: 45 }}>
@@ -54,7 +57,7 @@ export default function Avatar3DCanvas() {
         <directionalLight position={[-5, -5, -5]} intensity={0.5} />
         
         <Suspense fallback={<LoadingText />}>
-          <Card3D />
+          <Card3D backTextureUrl={safeTextureUrl} />
         </Suspense>
 
         <OrbitControls 

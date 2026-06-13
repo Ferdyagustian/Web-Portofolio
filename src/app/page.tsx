@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import PixelForest from '../components/three/PixelForest';
 import DialogueBox from '../components/ui/DialogueBox';
 import PixelCard from '../components/ui/PixelCard';
@@ -18,6 +19,7 @@ if (typeof window !== "undefined") {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const theme = useTheme();
@@ -67,9 +69,18 @@ export default function Home() {
       window.addEventListener('deviceorientation', handleOrientation);
     }
 
+    // Handle bfcache restoration (Back button after hard navigation)
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        window.location.reload();
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('deviceorientation', handleOrientation);
+      window.removeEventListener('pageshow', handlePageShow);
     };
   }, []);
 
@@ -190,6 +201,10 @@ export default function Home() {
     }
   };
 
+  const handleQuestNavigate = useCallback((slug: string) => {
+    router.push(`/quest/${slug}`);
+  }, [router]);
+
   return (
     <main style={{ position: 'relative' }} ref={container}>
       {/* 3D Background — theme-aware, receives mouse for parallax, now acts as the interactive scene wrapper */}
@@ -201,6 +216,7 @@ export default function Home() {
         status={status}
         handleSubmit={handleSubmit}
         errorMessage={errorMessage}
+        onQuestNavigate={handleQuestNavigate}
       />
 
       {/* Invisible Scroll Triggers for Lenis and GSAP ScrollTrigger */}
