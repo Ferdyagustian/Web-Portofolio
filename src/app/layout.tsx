@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   authors: [{ name: 'Ferdy Agustian Prasetyo' }],
   creator: 'Ferdy Agustian Prasetyo',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/icon.png',
   },
   openGraph: {
     title: 'Ferdy Agustian | AI Enthusiast & Full-Stack Developer',

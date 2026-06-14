@@ -97,46 +97,66 @@ h1, h2, h3, h4, h5, h6, .pixel-font {
 
 
 
-/* Custom Scrollbar — warm tones */
-::-webkit-scrollbar {
-  width: 10px;
+@media (min-width: 769px) {
+  /* Custom Scrollbar — warm tones */
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-black);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #3a6b33;
+    border: 2px solid var(--color-black);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-pixel-leaf);
+  }
+
+  /* Explicit Retro Scrollbar for Modals */
+  .custom-scrollbar-container::-webkit-scrollbar,
+  .modal-content-wrapper::-webkit-scrollbar {
+    width: 12px;
+  }
+
+  .custom-scrollbar-container::-webkit-scrollbar-track,
+  .modal-content-wrapper::-webkit-scrollbar-track {
+    background: #111;
+    border-left: 2px solid #333;
+  }
+
+  .custom-scrollbar-container::-webkit-scrollbar-thumb,
+  .modal-content-wrapper::-webkit-scrollbar-thumb {
+    background-color: #4ade80; /* bright green */
+    border: 3px solid #111; /* creates pixel border effect */
+    border-radius: 0px; /* pixel art doesn't use border-radius */
+  }
+
+  .custom-scrollbar-container::-webkit-scrollbar-thumb:hover,
+  .modal-content-wrapper::-webkit-scrollbar-thumb:hover {
+    background-color: #6dd892;
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: var(--color-black);
-}
-
-::-webkit-scrollbar-thumb {
-  background: #3a6b33;
-  border: 2px solid var(--color-black);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-pixel-leaf);
-}
-
-/* Explicit Retro Scrollbar for Modals */
-.custom-scrollbar-container::-webkit-scrollbar,
-.modal-content-wrapper::-webkit-scrollbar {
-  width: 12px;
-}
-
-.custom-scrollbar-container::-webkit-scrollbar-track,
-.modal-content-wrapper::-webkit-scrollbar-track {
-  background: #111;
-  border-left: 2px solid #333;
-}
-
-.custom-scrollbar-container::-webkit-scrollbar-thumb,
-.modal-content-wrapper::-webkit-scrollbar-thumb {
-  background-color: #4ade80; /* bright green */
-  border: 3px solid #111; /* creates pixel border effect */
-  border-radius: 0px; /* pixel art doesn't use border-radius */
-}
-
-.custom-scrollbar-container::-webkit-scrollbar-thumb:hover,
-.modal-content-wrapper::-webkit-scrollbar-thumb:hover {
-  background-color: #6dd892;
+@media (max-width: 768px) {
+  /* Hide scrollbar completely on mobile for clean UI */
+  .custom-scrollbar-container::-webkit-scrollbar,
+  .modal-content-wrapper::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+  }
+  .custom-scrollbar-container,
+  .modal-content-wrapper {
+    scrollbar-width: none;
+  }
+  
+  /* Hide custom pixel cursor on mobile to prevent static blue square bug */
+  .pixel-cursor {
+    display: none !important;
+  }
 }
 
 /* Lenis Recommended CSS */

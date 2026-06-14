@@ -192,7 +192,13 @@ export default function QuestPopup({ project, onClose, playSfx, onQuestNavigate 
           </div>
 
           {/* Body */}
-          <div style={{ padding: "20px 24px 24px" }}>
+          <div 
+            className="custom-scrollbar-container" 
+            style={{ padding: "20px 24px 24px", maxHeight: "70vh", overflowY: "auto" }}
+            data-lenis-prevent="true"
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+          >
             {project && (
               <>
                 {/* Quest number */}
@@ -222,6 +228,21 @@ export default function QuestPopup({ project, onClose, playSfx, onQuestNavigate 
                 >
                   {project.title}
                 </div>
+
+                {/* Video Template Placeholder */}
+                {project.questContent?.media?.length > 0 && project.questContent.media[0].type === "youtube" && (
+                  <div style={{ marginBottom: "16px", border: "2px solid rgba(255,255,255,0.1)", backgroundColor: "#000", boxShadow: "4px 4px 0px rgba(0,0,0,0.5)" }}>
+                    <div style={{ position: "relative", paddingTop: "56.25%" }}>
+                      <iframe
+                        src={project.questContent.media[0].url}
+                        title="Project Video"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* Stats grid */}
                 <div

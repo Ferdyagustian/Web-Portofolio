@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
               base-uri 'self';
               form-action 'self';
               frame-ancestors 'none';
+              frame-src 'self' https://www.youtube.com;
               connect-src 'self' https://zpgomcmoynrvrrugokrh.supabase.co;
             `.replace(/\s{2,}/g, ' ').trim(),
           },

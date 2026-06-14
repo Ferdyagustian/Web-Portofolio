@@ -351,7 +351,7 @@ export default function PixelForest({
               </button>
               <div className="modal-containerless-panel">
                 <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                  <h2 className="pixel-font" style={{ fontSize: '1.5rem', color: 'var(--color-cream)', textShadow: '3px 3px 0px var(--color-black)' }}>
+                  <h2 className="pixel-font" style={{ fontSize: isMobile ? '1.2rem' : '1.5rem', color: 'var(--color-cream)', textShadow: '3px 3px 0px var(--color-black)' }}>
                     WORKSHOP // SKILLS
                   </h2>
                 </div>

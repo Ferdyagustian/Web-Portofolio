@@ -71,8 +71,10 @@ export function SpatialHTMLUI({
       ref.current.style.opacity = opacity.toString();
       if (opacity <= 0.01) {
         ref.current.style.pointerEvents = 'none';
+        ref.current.style.visibility = 'hidden';
       } else {
         ref.current.style.pointerEvents = 'auto';
+        ref.current.style.visibility = 'visible';
       }
     };
 
@@ -107,7 +109,7 @@ export function SpatialHTMLUI({
         distanceFactor={isMobile ? 3.8 : 3.5}
         zIndexRange={[100, 101]}
       >
-        <div ref={heroHtmlRef} className="hero-box-billboard" style={{ transition: 'opacity 0.2s', width: isMobile ? '320px' : '480px', pointerEvents: 'auto' }}>
+        <div ref={heroHtmlRef} className="hero-box-billboard" style={{ width: isMobile ? '320px' : '480px', pointerEvents: 'auto' }}>
           <div 
             className="hero-box" 
             style={{ 
@@ -190,7 +192,7 @@ export function SpatialHTMLUI({
         distanceFactor={3.5}
         zIndexRange={[110, 111]}
       >
-        <div ref={aboutPromptRef} style={{ transition: 'opacity 0.2s', pointerEvents: 'none' }}>
+        <div ref={aboutPromptRef} style={{ pointerEvents: 'none' }}>
           <div
             className="pixel-font"
             style={{
@@ -220,7 +222,7 @@ export function SpatialHTMLUI({
         distanceFactor={3.5}
         zIndexRange={[110, 111]}
       >
-        <div ref={skillsPromptRef} style={{ transition: 'opacity 0.2s', pointerEvents: 'none' }}>
+        <div ref={skillsPromptRef} style={{ pointerEvents: 'none' }}>
           <div
             className="pixel-font"
             style={{
@@ -274,7 +276,7 @@ export function SpatialHTMLUI({
         distanceFactor={isMobile ? 2.8 : 3.5}
         zIndexRange={[100, 101]}
       >
-        <div ref={contactHtmlRef} style={{ transition: 'opacity 0.2s', width: isMobile ? '360px' : '520px', pointerEvents: 'auto' }}>
+        <div ref={contactHtmlRef} style={{ width: isMobile ? '360px' : '520px', pointerEvents: 'auto' }}>
           <DialogueBox title="Send a Message" className="contact-box" style={{ width: '100%' }}>
             <p style={{ marginBottom: '1rem', textAlign: 'center', fontSize: isMobile ? '1rem' : '0.9rem', lineHeight: 1.6 }}>
               Im more to be happy when i can make a good things for other people , so if you have a good things for me , just send a message!

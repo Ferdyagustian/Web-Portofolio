@@ -167,7 +167,7 @@ export function InteractiveFog({
     cp.rimIntensity = lerpNum(cp.rimIntensity, params.rimIntensity, LERP_SPEED);
     cp.vignetteIntensity = lerpNum(cp.vignetteIntensity, params.vignetteIntensity, LERP_SPEED);
 
-    // 3. Update uniforms
+    // 5. Update uniforms
     if (matRef.current) {
       const u = matRef.current.uniforms;
       u.uTime.value = state.clock.getElapsedTime();
