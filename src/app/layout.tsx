@@ -9,9 +9,6 @@ export const metadata: Metadata = {
   keywords: ['Ferdy Agustian', 'portfolio', 'AI enthusiast', 'full-stack developer', 'React', 'Next.js', 'Three.js', 'machine learning', 'web developer Indonesia', 'Universitas Gunadarma'],
   authors: [{ name: 'Ferdy Agustian Prasetyo' }],
   creator: 'Ferdy Agustian Prasetyo',
-  icons: {
-    icon: '/icon.png',
-  },
   openGraph: {
     title: 'Ferdy Agustian | AI Enthusiast & Full-Stack Developer',
     description: 'Explore the interactive pixel-art portfolio of Ferdy Agustian — featuring AI projects, web development work, and a 3D immersive experience built with Three.js.',
