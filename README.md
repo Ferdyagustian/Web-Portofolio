@@ -42,6 +42,8 @@ Proyek ini direkayasa untuk berjalan stabil di 60 FPS pada mayoritas peramban:
 * 🧠 **Manajemen Memori 3D:** Perbaikan siklus hidup material (*material disposal*) dan penjagaan lonjakan kecepatan (*velocity clamp*) pada *shader* kabut.
 * ⚙️ **Konfigurasi Meta:** Standarisasi hierarki `icon.png` mengikuti kaidah *App Router* terbaru.
 
+
+Thanks!
 ---
 
 > **Dibuat oleh** Ferdy Agustian Prasetyo.  
