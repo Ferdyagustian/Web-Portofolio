@@ -43,7 +43,7 @@ Proyek ini direkayasa untuk berjalan stabil di 60 FPS pada mayoritas peramban:
 * ⚙️ **Konfigurasi Meta:** Standarisasi hierarki `icon.png` mengikuti kaidah *App Router* terbaru.
 
 
-Thanks!
+Thanks!!
 ---
 
 > **Dibuat oleh** Ferdy Agustian Prasetyo.  
