@@ -14,7 +14,8 @@ Portofolio interaktif bergaya **pixel art / RPG retro** yang dibangun di atas ka
 ## Fitur Utama
 
 * **Dunia 3D sebagai Fondasi:** Latar belakang hutan 3D interaktif (menggunakan `Three.js` & `React Three Fiber`) yang mencakup pohon, efek partikel daun jatuh, api unggun, dan perubahan lingkungan yang dinamis.
-* **Sistem Tema Real-Time (Time-Based Theme):** Suasana visual (pencahayaan, warna langit, visibilitas objek) dan BGM *crossfade* berubah secara otomatis mengikuti jam lokal pengguna (WIB/UTC+7) — Pagi, Siang, Sore, dan Malam.
+* **Sistem Tema Real-Time (Time-Based Theme):** Suasana visual (pencahayaan, warna langit, visibilitas objek) dan BGM *crossfade* berubah secara otomatis mengikuti jam lokal pengguna (WIB/UTC+7)
+Pagi (05.00-10.59), Siang (11.00-14.59) , Sore (15.00-17.59) , dan Malam (18.00-04.59).
 * **Kabut Interaktif (GLSL Custom Shader):** Implementasi *Fragment Shader* dengan *fBm Noise* yang merespons posisi *mouse* (*vortex effect*), kecepatan *scroll*, dan perhitungan *pseudo-depth*.
 * **Navigasi Sinematik:** Transisi antar-bagian yang mulus menggunakan integrasi **Lenis** (*smooth scroll*) dan **GSAP ScrollTrigger**.
 * **Sistem Audio Multi-Layer:** Pemisahan antara BGM (HTML5 Audio) dan efek suara SFX *polyphonic* (Web Audio API) untuk interaksi UI yang responsif tanpa *audio-clipping*.
