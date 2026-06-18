@@ -1,6 +1,6 @@
 # 📖 DOKUMENTASI KODE — Pixel Portfolio (Ferdy Agustian)
 
-> **Terakhir diperbarui:** 11 Juni 2026  
+> **Terakhir diperbarui:** 14 Juni 2026  
 > **Framework:** Next.js 16 + React 19 + TypeScript  
 > **Dibuat oleh:** Ferdy Agustian Prasetyo  
 > **URL:** https://slowwalkferdy.vercel.app
@@ -33,7 +33,8 @@ Website ini adalah **portofolio interaktif bergaya pixel art / RPG retro** yang 
 ### Konsep Unik
 
 - **Dunia 3D sebagai background**: Hutan piksel 3D animasi (pohon, semak, api unggun, daun jatuh) bertindak sebagai layar belakang yang hidup.
-- **Satu halaman penuh**: Hanya `page.tsx` satu halaman. Navigasi antar section menggunakan `Lenis` (smooth scroll) dan `GSAP ScrollTrigger`.
+- **Dunia Utama & Halaman Detail**: Menggunakan `app/page.tsx` untuk dunia interaktif 3D utama, serta sistem *dynamic routing* `app/quest/[slug]/page.tsx` untuk menampilkan halaman rincian spesifik dari tiap proyek.
+- **Navigasi Mulus**: Berpindah antar section 3D menggunakan `Lenis` (smooth scroll) dan `GSAP ScrollTrigger`.
 - **Tema berubah otomatis**: Warna langit, cahaya, musik, dan efek kabut berubah mengikuti waktu nyata di Indonesia (WIB, UTC+7) — pagi, siang, sore, malam.
 - **Kabut Interaktif**: Efek kabut GLSL shader merespons pergerakan mouse, kecepatan scroll, dan arah scroll pengguna.
 
@@ -60,10 +61,14 @@ c:\Portofolio web\
 ├── src/
 │   ├── app/
 │   │   ├── layout.tsx              # Root layout + metadata SEO + font + providers
-│   │   ├── page.tsx                # Halaman utama (satu-satunya halaman)
+│   │   ├── page.tsx                # Halaman dunia 3D utama
 │   │   ├── globals.css             # CSS global: tema, animasi, komponen UI
 │   │   ├── robots.ts               # SEO: robots.txt
-│   │   └── sitemap.ts              # SEO: sitemap.xml
+│   │   ├── sitemap.ts              # SEO: sitemap.xml
+│   │   ├── icon.png                # Favicon utama (standar App Router)
+│   │   ├── quest/
+│   │   │   └── [slug]/
+│   │   │       └── page.tsx        # Halaman detail dinamis untuk tiap proyek/quest
 │   │   └── api/
 │   │       └── contact/
 │   │           └── route.ts        # API Route: kirim email + simpan ke Supabase
@@ -73,7 +78,8 @@ c:\Portofolio web\
 │   │   │   └── Navbar.tsx          # Navigasi atas (fixed, transparan → solid saat scroll)
 │   │   ├── three/
 │   │   │   ├── PixelForest.tsx     # 🌟 Komponen utama: seluruh adegan 3D + UI modal
-│   │   │   └── Avatar3DCanvas.tsx  # Kanvas 3D untuk tampilan avatar interaktif
+│   │   │   ├── Avatar3DCanvas.tsx  # Kanvas 3D untuk tampilan avatar interaktif
+│   │   │   └── environment/        # Kumpulan sub-komponen dunia 3D (Sky, Effects, SpatialUI, dll)
 │   │   └── ui/
 │   │       ├── DialogueBox.tsx     # Kotak dialog bergaya RPG (judul + konten)
 │   │       ├── InteractiveAvatar.tsx # Avatar profil yang bisa di-klik untuk melihat 3D
@@ -88,6 +94,7 @@ c:\Portofolio web\
 │   │       └── SettingsMenu.tsx    # Menu pengaturan audio (gear icon + panel kayu)
 │   │
 │   ├── lib/
+│   │   ├── questData.ts            # Database utama: data seluruh proyek/quest dan propertinya
 │   │   ├── themeConfig.ts          # Konfigurasi visual per tema (warna, cahaya, dll)
 │   │   ├── useTimeTheme.ts         # Hook: deteksi tema berdasarkan jam WIB
 │   │   └── supabase/
@@ -290,7 +297,9 @@ const { isBgmEnabled, isSfxEnabled, bgmVolume, sfxVolume,
 
 File ini berisi **seluruh adegan 3D dan semua UI modal** dalam satu file besar. Dibagi menjadi sub-komponen berikut:
 
-### 7.1 Sub-komponen 3D
+### 7.1 Sub-komponen 3D (`src/components/three/environment/`)
+
+Semua objek fisik 3D dan efek visual dipisah ke dalam modul kecil di dalam sub-direktori `environment/` demi menjaga kebersihan kode `PixelForest`.
 
 #### `DynamicSky`
 - Plane geometry besar yang menutup seluruh background
@@ -585,9 +594,13 @@ Semua styling ada di satu file CSS global (tidak menggunakan Tailwind utility cl
 
 ---
 
-## 11. Halaman Utama (page.tsx)
+## 11. Struktur Halaman Utama & Detail
 
-File ini mengatur **logika tingkat atas** halaman:
+Website ini menggunakan kombinasi _One-Page 3D Experience_ dan _Dynamic Routing_.
+
+### 11.1 Halaman Dunia Utama (`app/page.tsx`)
+
+File ini mengatur **logika tingkat atas** halaman 3D interaktif:
 
 ### State & Refs Utama
 
@@ -632,11 +645,21 @@ File ini mengatur **logika tingkat atas** halaman:
 </main>
 ```
 
+### 11.2 Halaman Detail Proyek (`app/quest/[slug]/page.tsx`)
+
+Ketika pengguna menekan tombol "ACCEPT QUEST" di Quest Board, mereka akan diarahkan ke halaman detail statis ini. Halaman ini bertugas merender:
+- **Hero Image & Metadata:** Judul, durasi, dan tautan kode/demo.
+- **Quest Objectives & Fase:** Tahapan pengerjaan yang diambil dari array `questContent.phases`.
+- **Media & Dokumentasi:** Menampilkan komponen *iframe* video YouTube atau cuplikan gambar dari rincian `questContent.media`.
+
 ---
 
 ## 12. Alur Data & Arsitektur
 
-```
+```text
+questData.ts (Single Source of Truth)
+  └── Menyediakan array QUEST_PROJECTS untuk Gallery dan halaman Detail
+
 page.tsx
   ├── Membaca posisi mouse/gyro → mousePosRef
   ├── State form kontak → formData, status
@@ -734,4 +757,33 @@ PixelForest.tsx
 
 ---
 
-*Dokumentasi ini dibuat secara otomatis dari analisis kode pada 11 Juni 2026.*
+*Dokumentasi ini dibuat secara otomatis dari analisis kode pada 11 Juni 2026 dan diperbarui secara berkala.*
+
+---
+
+## 15. Log Pembaruan (14 Juni 2026)
+
+Pada sesi pembaruan ini, beberapa perbaikan teknis dan penambahan fitur telah diimplementasikan untuk meningkatkan performa dan pengalaman pengguna, khususnya pada perangkat *mobile*.
+
+### 15.1 Optimasi UI & Responsivitas Mobile
+- **Custom Scrollbar:** Diubah agar hanya aktif di desktop (`min-width: 769px`), mencegah konflik layout di perangkat *mobile*.
+- **Pixel Cursor:** Dinonaktifkan secara paksa di perangkat sentuh (*mobile/tablet*) untuk menghindari *bug* kotak biru statis yang menempel di layar.
+- **Font Size:** Penyesuaian ukuran font pada judul "WORKSHOP // SKILLS" di dalam kanvas 3D agar proporsional di layar kecil.
+
+### 15.2 Perbaikan Rendering 3D & Performa
+- **InteractiveFog (Kabut):** 
+  - Penambahan *warm-up guard* (`isWarmingUp`) agar animasi transisi kabut hanya dimulai *setelah* *loading screen* selesai.
+  - Implementasi *velocity clamp* untuk mencegah *spike* tiba-tiba saat inisialisasi.
+  - Perbaikan pada sistem manajemen memori (*disposal material*) untuk menjaga stabilitas *frame rate*.
+- **SpatialUI Text Glitch (Mobile):** 
+  - Menghapus tabrakan antara `transition: 'opacity 0.2s'` CSS dengan pembaruan `useFrame` yang berjalan hingga 60-120 FPS pada elemen antarmuka 3D (seperti Hero Title dan Contact Panel).
+  - Menambahkan aturan `visibility: 'hidden'` secara dinamis saat *opacity* menyentuh 0% untuk menghentikan komputasi animasi CSS di latar belakang (seperti efek *wave-letter*), sepenuhnya mengeliminasi efek *jitter/glitch* saat pengguna melakukan *scroll* balik ke posisi atas.
+
+### 15.3 Peningkatan Fungsionalitas Quest Board
+- **Template Video YouTube:** Menyematkan komponen *iframe* video YouTube (menggunakan *template walkthrough* bawaan dari sistem) secara langsung ke dalam halaman detail mini (`QuestPopup.tsx`) berdasarkan data rekam jejak `questData.media`.
+- **Perbaikan Scroll Modal:** Mengatasi *bug* interaksi *Lenis Smooth Scroll* yang secara tidak sengaja "membajak" area guliran kursor/layar di dalam modal popup. Diaplikasikan `data-lenis-prevent="true"`, `onWheel`, dan `onTouchMove` dengan fungsi `stopPropagation()` agar isi popup panjang yang berisi deskripsi dan video dapat di-*scroll* secara natif dan independen.
+- **Pembaruan Content-Security-Policy (CSP):** Memperbaiki berkas `next.config.ts` dengan menyematkan secara eksplisit aturan `frame-src 'self' https://www.youtube.com;` agar perlindungan keamanan internal *browser* mengizinkan injeksi video eksternal.
+
+### 15.4 Standarisasi Favicon (Next.js App Router)
+- **Penanganan Konflik Ikon:** Menghapus secara permanen file statis `favicon.ico` bawaan struktur awal (opsi *fallback* Vercel) yang mengambil alih paksa prioritas ikon pada *browser*.
+- **Migrasi Struktur Ikon:** Memindahkan file `public/icon.png` ke koridor direktori utama `src/app/icon.png` (langkah ini secara mutlak mematuhi standar hierarki dari *App Router* milik Next.js versi 13 ke atas) serta membersihkan konfigurasi statik `icons` di `layout.tsx` agar Next.js mampu mendeteksi tipe mime dan me-*render* ikon *tab* dengan dinamis serta membangun tembolok (*cache header*) secara otomatis.

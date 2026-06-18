@@ -14,6 +14,54 @@ const getThemeAccentColor = (theme: string) => {
   }
 };
 
+// Retro Pixel Art Icons using SVGs with shape-rendering: crispEdges
+const SunIcon = () => (
+  <svg 
+    width="12" 
+    height="12" 
+    viewBox="0 0 12 12" 
+    fill="currentColor" 
+    style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle', shapeRendering: 'crispEdges' }}
+  >
+    <rect x="4" y="4" width="4" height="4" />
+    <rect x="5" y="1" width="2" height="1" />
+    <rect x="5" y="10" width="2" height="1" />
+    <rect x="1" y="5" width="1" height="2" />
+    <rect x="10" y="5" width="1" height="2" />
+    <rect x="2" y="2" width="1" height="1" />
+    <rect x="9" y="2" width="1" height="1" />
+    <rect x="2" y="9" width="1" height="1" />
+    <rect x="9" y="9" width="1" height="1" />
+  </svg>
+);
+
+const LightningIcon = () => (
+  <svg 
+    width="12" 
+    height="12" 
+    viewBox="0 0 12 12" 
+    fill="currentColor" 
+    style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle', shapeRendering: 'crispEdges' }}
+  >
+    <path d="M7,1 H5 L3,6 H6 L5,11 L9,5 H6 L7,1 Z" />
+  </svg>
+);
+
+const PotatoIcon = () => (
+  <svg 
+    width="12" 
+    height="12" 
+    viewBox="0 0 12 12" 
+    fill="currentColor" 
+    style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle', shapeRendering: 'crispEdges' }}
+  >
+    <path d="M4,2 H8 V3 H10 V5 H11 V7 H10 V9 H8 V10 H4 V9 H2 V7 H1 V5 H2 V3 H4 Z" />
+    <rect x="4" y="4" width="1" height="1" fill="#000" opacity="0.35" />
+    <rect x="7" y="7" width="1" height="1" fill="#000" opacity="0.35" />
+    <rect x="8" y="4" width="1" height="1" fill="#000" opacity="0.35" />
+  </svg>
+);
+
 interface LoadingScreenProps {
   onStart: (mode: 'normal' | 'light' | 'potato') => void;
 }
@@ -60,6 +108,15 @@ export function LoadingScreen({ onStart }: LoadingScreenProps) {
   const currentProgress = Math.max(progress, simulatedProgress);
   const isLoaded = currentProgress >= 100 || progress === 100;
 
+  const [dots, setDots] = useState('...');
+  useEffect(() => {
+    if (isLoaded) return;
+    const interval = setInterval(() => {
+      setDots((d) => (d.length >= 3 ? '' : d + '.'));
+    }, 500);
+    return () => clearInterval(interval);
+  }, [isLoaded]);
+
   const handleStart = React.useCallback((e?: React.MouseEvent) => {
     if (e && (e.target as HTMLElement).closest('.performance-toggle')) return;
     if (isFading) return;
@@ -92,7 +149,7 @@ export function LoadingScreen({ onStart }: LoadingScreenProps) {
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        backgroundColor: '#0a0a0c',
+        backgroundColor: '#070709',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -108,10 +165,33 @@ export function LoadingScreen({ onStart }: LoadingScreenProps) {
         overflow: 'hidden',
       }}
     >
+      {/* CRT Scanline Overlay */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%)',
+        backgroundSize: '100% 4px',
+        zIndex: 1,
+        pointerEvents: 'none',
+      }} />
+
+      {/* Radial Vignette */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'radial-gradient(circle, transparent 20%, rgba(0, 0, 0, 0.8) 100%)',
+        zIndex: 2,
+        pointerEvents: 'none',
+      }} />
+
       <style>{`
         @keyframes slime-hop {
           0%, 100% { transform: scale(0.8) translateY(0); }
           50% { transform: scale(0.8) translateY(-6px); }
+        }
+        @keyframes arcade-blink {
+          0%, 49% { opacity: 1; }
+          50%, 100% { opacity: 0.2; }
         }
       `}</style>
 
@@ -123,6 +203,7 @@ export function LoadingScreen({ onStart }: LoadingScreenProps) {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
+        zIndex: 5,
       }}>
         <h2 style={{
           color: '#e2e8f0',
@@ -131,19 +212,20 @@ export function LoadingScreen({ onStart }: LoadingScreenProps) {
           fontSize: '1rem',
           fontFamily: 'var(--font-sixtyfour), monospace',
           textTransform: 'uppercase',
+          textShadow: '2px 2px 0px #000',
         }}>
-          Loading...
+          Loading{isLoaded ? '...' : dots}
         </h2>
 
         {/* Progress bar */}
         <div style={{
           position: 'relative',
           width: '100%',
-          height: '16px',
-          border: `2px solid ${themeColor}`,
+          height: '18px',
+          border: `4px solid ${themeColor}`,
           padding: '2px',
-          marginBottom: '0.8rem',
-          boxShadow: `0 0 10px ${themeColor}33`,
+          marginBottom: '1rem',
+          boxShadow: `4px 4px 0px #000000`,
         }}>
           <div style={{
             position: 'absolute',
@@ -197,10 +279,11 @@ export function LoadingScreen({ onStart }: LoadingScreenProps) {
               style={{
                 display: 'flex',
                 gap: '4px',
-                backgroundColor: 'rgba(0,0,0,0.6)',
-                padding: '4px',
-                borderRadius: '8px',
-                border: '1px solid #334155',
+                backgroundColor: '#111827',
+                padding: '6px',
+                borderRadius: '0px',
+                border: '2px solid #374151',
+                boxShadow: '4px 4px 0px #000000',
                 userSelect: 'none',
               }}
             >
@@ -209,59 +292,68 @@ export function LoadingScreen({ onStart }: LoadingScreenProps) {
                 style={{
                   background: performanceMode === 'normal' ? 'linear-gradient(135deg, #4ade8022, transparent)' : 'transparent',
                   color: performanceMode === 'normal' ? '#4ade80' : '#64748b',
-                  border: `1px solid ${performanceMode === 'normal' ? '#4ade80' : 'transparent'}`,
-                  borderRadius: '4px',
-                  padding: '8px 16px',
+                  border: `2px solid ${performanceMode === 'normal' ? '#4ade80' : 'transparent'}`,
+                  borderRadius: '0px',
+                  padding: '8px 14px',
                   fontSize: '0.65rem',
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease',
+                  transition: 'all 0.15s steps(2)',
                   textShadow: performanceMode === 'normal' ? '0 0 8px rgba(74, 222, 128, 0.4)' : 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
-                🌟 Normal
+                <SunIcon /> Normal
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); setPerformanceMode('light'); }}
                 style={{
                   background: performanceMode === 'light' ? 'linear-gradient(135deg, #60a5fa22, transparent)' : 'transparent',
                   color: performanceMode === 'light' ? '#60a5fa' : '#64748b',
-                  border: `1px solid ${performanceMode === 'light' ? '#60a5fa' : 'transparent'}`,
-                  borderRadius: '4px',
-                  padding: '8px 16px',
+                  border: `2px solid ${performanceMode === 'light' ? '#60a5fa' : 'transparent'}`,
+                  borderRadius: '0px',
+                  padding: '8px 14px',
                   fontSize: '0.65rem',
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease',
+                  transition: 'all 0.15s steps(2)',
                   textShadow: performanceMode === 'light' ? '0 0 8px rgba(96, 165, 250, 0.4)' : 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
-                ⚡ Light
+                <LightningIcon /> Light
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); setPerformanceMode('potato'); }}
                 style={{
                   background: performanceMode === 'potato' ? 'linear-gradient(135deg, #fbbf2422, transparent)' : 'transparent',
                   color: performanceMode === 'potato' ? '#fbbf24' : '#64748b',
-                  border: `1px solid ${performanceMode === 'potato' ? '#fbbf24' : 'transparent'}`,
-                  borderRadius: '4px',
-                  padding: '8px 16px',
+                  border: `2px solid ${performanceMode === 'potato' ? '#fbbf24' : 'transparent'}`,
+                  borderRadius: '0px',
+                  padding: '8px 14px',
                   fontSize: '0.65rem',
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease',
+                  transition: 'all 0.15s steps(2)',
                   textShadow: performanceMode === 'potato' ? '0 0 8px rgba(251, 191, 36, 0.4)' : 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
-                🥔 Ultra Potato
+                <PotatoIcon /> Ultra Potato
               </button>
             </div>
 
             <span
-              className={isLoaded ? 'animate-pulse' : ''}
               style={{
                 color: themeColor,
                 fontFamily: 'var(--font-sixtyfour), monospace',
                 letterSpacing: '0.05em',
                 fontSize: isMobile ? '0.45rem' : '0.55rem',
                 textShadow: `0 0 12px ${themeColor}80`,
+                animation: isLoaded ? 'arcade-blink 1.0s steps(1) infinite' : 'none',
               }}
             >
               CLICK ANYWHERE TO START

@@ -9,70 +9,70 @@ import { LERP_SPEED, lerpColor, lerpNum } from './utils';
 
 export const FOG_THEME_PARAMS: Record<TimeTheme, {
   highlightColor: string;
-  overlayFogColor: string; // P2: lighter variant of fogColor for screen-space layer
+  overlayFogColor: string;
   maxDensity: number;
-  driftSpeed: [number, number]; // [speedX, speedY]
+  driftSpeed: [number, number];
   rimIntensity: number;
-  vignetteIntensity: number; // P3: 0=mild, 1=heavy edge darkening
+  vignetteIntensity: number;
 }> = {
+  // Pagi: Sunrise — warm peach mist rising, golden celestial highlight
   pagi: {
-    highlightColor: '#ffd700', // Warm Gold
-    overlayFogColor: '#d8c4a8', // Lighter warm tone
-    maxDensity: 0.85,
-    driftSpeed: [0.02, 0.06], // Evaporating morning mist (rising vertically)
-    rimIntensity: 0.7,
-    vignetteIntensity: 0.3,
+    highlightColor: '#FFD93D',
+    overlayFogColor: '#c9a67a',
+    maxDensity: 0.80,
+    driftSpeed: [0.02, 0.06],
+    rimIntensity: 0.65,
+    vignetteIntensity: 0.25,
   },
+  // Siang: Noon — light airy haze, barely visible, crisp atmosphere
   siang: {
-    highlightColor: '#e0f7fa', // Sunbeam Cyan
-    overlayFogColor: '#c0d8f0', // Lighter blue
-    maxDensity: 0.65, // Thickened to be more visible
-    driftSpeed: [0.01, 0.01], // Extremely calm drift
-    rimIntensity: 0.4,
-    vignetteIntensity: 0.2,
+    highlightColor: '#FFE082',
+    overlayFogColor: '#9bbdd8',
+    maxDensity: 0.55,
+    driftSpeed: [0.01, 0.01],
+    rimIntensity: 0.35,
+    vignetteIntensity: 0.15,
   },
+  // Sore: Sunset — heavy dramatic twilight, ember glow
   sore: {
-    highlightColor: '#ff6a00', // Glowing Sunset Orange
-    overlayFogColor: '#4a2040', // Lighter purple-dark
-    maxDensity: 0.90, // Heavy sunset twilight haze
-    driftSpeed: [0.07, -0.04], // Swirling/tumbling dust particles
-    rimIntensity: 1.1,
-    vignetteIntensity: 0.5,
+    highlightColor: '#FF6B35',
+    overlayFogColor: '#3d1828',
+    maxDensity: 0.88,
+    driftSpeed: [0.07, -0.04],
+    rimIntensity: 1.0,
+    vignetteIntensity: 0.45,
   },
+  // Malam: Night — dense mystical ground fog, bioluminescent moonlight
   malam: {
-    highlightColor: '#88ddff', // Bioluminescent Cyan
-    overlayFogColor: '#3d5a6a', // Lighter dark teal
-    maxDensity: 0.95, // Mystical, dense ground forest fog
-    driftSpeed: [0.05, 0.00], // Smooth horizontal creeping fog
-    rimIntensity: 1.3,
-    vignetteIntensity: 0.7,
+    highlightColor: '#d0e8ff',
+    overlayFogColor: '#1e3545',
+    maxDensity: 0.92,
+    driftSpeed: [0.05, 0.00],
+    rimIntensity: 1.2,
+    vignetteIntensity: 0.60,
   },
 };
 
-/* ===== Interactive 3D Fog (UI/UX Pro Max) ===== */
 export function InteractiveFog({
   theme,
   scrollProgress,
   reducedMotion = false,
   isStarted = false,
-  isLowQuality = false,
 }: {
   theme: TimeTheme;
   scrollProgress: React.RefObject<number>;
   reducedMotion?: boolean;
   isStarted?: boolean;
-  isLowQuality?: boolean;
 }) {
   const { size } = useThree();
   const isMobile = size.width < 768;
   const meshRef = useRef<THREE.Mesh>(null);
   const matRef = useRef<THREE.ShaderMaterial>(null);
 
-  // Velocity tracking refs
   const prevPointer = useRef(new THREE.Vector2());
   const mouseVelocity = useRef(0);
+  const mouseDirection = useRef(new THREE.Vector2(1, 0));
 
-  // Active theme parameters (current interpolated values)
   const currentParams = useRef({
     fogColor: new THREE.Color(FOG_THEME_PARAMS[theme].overlayFogColor),
     highlightColor: new THREE.Color(FOG_THEME_PARAMS[theme].highlightColor),
@@ -80,29 +80,35 @@ export function InteractiveFog({
     driftSpeed: new THREE.Vector2(...FOG_THEME_PARAMS[theme].driftSpeed),
     rimIntensity: FOG_THEME_PARAMS[theme].rimIntensity,
     vignetteIntensity: FOG_THEME_PARAMS[theme].vignetteIntensity,
-    opacity: 0.0, // Mulai dari 0 (tak kasat mata) saat pertama kali load
+    opacity: 0.0,
   });
 
-  // P0: Cached target values — updated only on theme change, not per-frame
-  const targetFogColor = useRef(new THREE.Color(FOG_THEME_PARAMS[theme].overlayFogColor));
-  const targetHighlightColor = useRef(new THREE.Color(FOG_THEME_PARAMS[theme].highlightColor));
-  const targetDriftSpeed = useRef(new THREE.Vector2(...FOG_THEME_PARAMS[theme].driftSpeed));
+  const targetParams = useRef({
+    fogColor: new THREE.Color(FOG_THEME_PARAMS[theme].overlayFogColor),
+    highlightColor: new THREE.Color(FOG_THEME_PARAMS[theme].highlightColor),
+    maxDensity: FOG_THEME_PARAMS[theme].maxDensity,
+    driftSpeed: new THREE.Vector2(...FOG_THEME_PARAMS[theme].driftSpeed),
+    rimIntensity: FOG_THEME_PARAMS[theme].rimIntensity,
+    vignetteIntensity: FOG_THEME_PARAMS[theme].vignetteIntensity,
+  });
 
   useEffect(() => {
     const params = FOG_THEME_PARAMS[theme];
-    targetFogColor.current.set(params.overlayFogColor);
-    targetHighlightColor.current.set(params.highlightColor);
-    targetDriftSpeed.current.set(...params.driftSpeed);
+    targetParams.current.fogColor.set(params.overlayFogColor);
+    targetParams.current.highlightColor.set(params.highlightColor);
+    targetParams.current.maxDensity = params.maxDensity;
+    targetParams.current.driftSpeed.set(...params.driftSpeed);
+    targetParams.current.rimIntensity = params.rimIntensity;
+    targetParams.current.vignetteIntensity = params.vignetteIntensity;
   }, [theme]);
 
-  // Shader uniforms memoization
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const uniforms = useMemo(() => ({
     uTime: { value: 0 },
     uMouse: { value: new THREE.Vector2(0, 0) },
     uMouseVelocity: { value: 0.0 },
+    uMouseDirection: { value: new THREE.Vector2(1, 0) },
     uScrollProgress: { value: 0.0 },
-    uOpacity: { value: 1.0 },
+    uOpacity: { value: 0.0 },
     uFogColor: { value: new THREE.Color(FOG_THEME_PARAMS[theme].overlayFogColor) },
     uHighlightColor: { value: new THREE.Color(FOG_THEME_PARAMS[theme].highlightColor) },
     uResolution: { value: new THREE.Vector2(size.width, size.height) },
@@ -111,14 +117,8 @@ export function InteractiveFog({
     uIsMobile: { value: isMobile ? 1.0 : 0.0 },
     uVignetteIntensity: { value: FOG_THEME_PARAMS[theme].vignetteIntensity },
     uReducedMotion: { value: reducedMotion ? 1.0 : 0.0 },
-    uScrollDirection: { value: 1.0 }, // 1.0 for down, -1.0 for up
-  }), []);
+  }), []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Track previous scroll for direction
-  const lastScrollProgress = useRef(0);
-  const scrollDirection = useRef(1.0);
-
-  // Update resolution on size change
   useEffect(() => {
     if (matRef.current) {
       matRef.current.uniforms.uResolution.value.set(size.width, size.height);
@@ -126,75 +126,62 @@ export function InteractiveFog({
     }
   }, [size.width, size.height, isMobile]);
 
+
   useFrame((state, delta) => {
-    // 1. Calculate Target Opacity based on scroll
     const sp = scrollProgress.current ?? 0;
     const rawFade = Math.max(0, 1.0 - sp * 2.5);
-    const desktopOpacity = rawFade * rawFade; // P2: quadratic easing for natural fade
-    const mobileOpacity = rawFade * rawFade * 0.4; // P1: reduced density for mobile perf
-    const targetOpacity = isMobile ? mobileOpacity : desktopOpacity;
+    const easedFade = rawFade * rawFade;
+    const targetOpacity = (isMobile ? easedFade * 0.4 : easedFade);
 
-    const params = FOG_THEME_PARAMS[theme];
     const cp = currentParams.current;
+    const tp = targetParams.current;
 
-    // 2. Interpolate opacity
-    // Jika belum di-start, tahan opasitas di 0
     if (!isStarted) {
       cp.opacity = 0.0;
     } else if (cp.opacity < targetOpacity * cp.maxDensity - 0.05) {
-      cp.opacity += delta * 0.15; // Kecepatan muncul perlahan (setelah klik start)
+      cp.opacity += delta * 0.15;
     } else {
       cp.opacity = lerpNum(cp.opacity, targetOpacity * cp.maxDensity, LERP_SPEED * 1.5);
     }
 
-    // GPU Warm-up: Turn on shader slightly earlier (sp < 0.45) 
-    // even when opacity is 0, to absorb compilation/fill-rate spikes before fog is visible.
-    const isWarmingUp = sp < 0.45;
-
-    // 3. Performance Guard — only hide if both target and current opacity are practically invisible AND not warming up
-    if (targetOpacity <= 0.001 && cp.opacity <= 0.005 && !isWarmingUp) {
+    if (targetOpacity <= 0.001 && cp.opacity <= 0.005) {
       if (meshRef.current) meshRef.current.visible = false;
-      return; // Skip other heavy uniform updates to save GPU
+      return;
     }
 
     if (meshRef.current) meshRef.current.visible = true;
 
-    // 4. Interpolate Theme Values smoothly
-    lerpColor(cp.fogColor, targetFogColor.current, LERP_SPEED);
-    lerpColor(cp.highlightColor, targetHighlightColor.current, LERP_SPEED);
-    cp.maxDensity = lerpNum(cp.maxDensity, params.maxDensity, LERP_SPEED);
-    cp.driftSpeed.lerp(targetDriftSpeed.current, LERP_SPEED);
-    cp.rimIntensity = lerpNum(cp.rimIntensity, params.rimIntensity, LERP_SPEED);
-    cp.vignetteIntensity = lerpNum(cp.vignetteIntensity, params.vignetteIntensity, LERP_SPEED);
+    // Lerp semua parameter
+    lerpColor(cp.fogColor, tp.fogColor, LERP_SPEED);
+    lerpColor(cp.highlightColor, tp.highlightColor, LERP_SPEED);
+    cp.maxDensity = lerpNum(cp.maxDensity, tp.maxDensity, LERP_SPEED);
+    cp.driftSpeed.lerp(tp.driftSpeed, LERP_SPEED);
+    cp.rimIntensity = lerpNum(cp.rimIntensity, tp.rimIntensity, LERP_SPEED);
+    cp.vignetteIntensity = lerpNum(cp.vignetteIntensity, tp.vignetteIntensity, LERP_SPEED);
 
-    // 5. Update uniforms
     if (matRef.current) {
       const u = matRef.current.uniforms;
       u.uTime.value = state.clock.getElapsedTime();
       u.uScrollProgress.value = sp;
 
-      // Determine scroll direction for distinct animations
-      const deltaSp = sp - lastScrollProgress.current;
-      if (Math.abs(deltaSp) > 0.0001) {
-        // Smoothly interpolate direction to prevent snapping
-        scrollDirection.current = lerpNum(scrollDirection.current, deltaSp > 0 ? 1.0 : -1.0, LERP_SPEED * 0.5);
-      }
-      lastScrollProgress.current = sp;
-      u.uScrollDirection.value = scrollDirection.current;
-
-      // Calculate velocity
       const dt = Math.max(0.001, delta);
       const dist = state.pointer.distanceTo(prevPointer.current);
       const currentVel = dist / dt;
 
-      // Decay velocity fast if not moving, rise fast if moving
+      // [PERBAIKAN FISIKA] 
+      // Hitung arah mouse SEBELUM prevPointer diupdate, agar vektor arah tidak nol
+      if (dist > 0.001) {
+        const rawDir = new THREE.Vector2().subVectors(state.pointer, prevPointer.current).normalize();
+        mouseDirection.current.lerp(rawDir, 0.12);
+        mouseDirection.current.normalize();
+      }
+
       mouseVelocity.current = lerpNum(mouseVelocity.current, currentVel, LERP_SPEED * 2.0);
-      prevPointer.current.copy(state.pointer);
+      prevPointer.current.copy(state.pointer); // Update prev pointer setelah arah dihitung
 
       u.uMouseVelocity.value = mouseVelocity.current;
-
-      // Interpolate mouse vector to prevent jerky motion on sudden moves
       u.uMouse.value.lerp(state.pointer, 0.08);
+      u.uMouseDirection.value.copy(mouseDirection.current);
 
       u.uOpacity.value = cp.opacity;
       u.uFogColor.value.copy(cp.fogColor);
@@ -213,13 +200,14 @@ export function InteractiveFog({
         varying vec2 vUv;
         void main() {
           vUv = uv;
-          gl_Position = vec4(position, 1.0); // Fullscreen Quad positioned locally
+          gl_Position = vec4(position, 1.0);
         }
       `,
       fragmentShader: `
         uniform float uTime;
         uniform vec2 uMouse;
         uniform float uMouseVelocity;
+        uniform vec2 uMouseDirection;
         uniform float uScrollProgress;
         uniform float uOpacity;
         uniform vec3 uFogColor;
@@ -230,37 +218,29 @@ export function InteractiveFog({
         uniform float uIsMobile;
         uniform float uVignetteIntensity;
         uniform float uReducedMotion;
-        uniform float uScrollDirection;
         varying vec2 vUv;
 
-        // Standard high-performance pseudo-random hash
         float hash(vec2 p) {
           return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
         }
 
-        // 2D Smooth Bilinear Noise
         float noise(vec2 p) {
           vec2 i = floor(p);
           vec2 f = fract(p);
           vec2 u = f * f * (3.0 - 2.0 * f);
-          return mix(mix(hash(i + vec2(0.0,0.0)), hash(i + vec2(1.0,0.0)), u.x),
+          return mix(mix(hash(i), hash(i + vec2(1.0,0.0)), u.x),
                      mix(hash(i + vec2(0.0,1.0)), hash(i + vec2(1.0,1.0)), u.x), u.y);
         }
 
-        // Simplified Shader (Option 3): No loops to drastically boost framerate
         float fbm(vec2 p) {
-          // Hanya satu layer noise sederhana
-          float v = noise(p) * 0.6;
-          
-          // Tambah satu layer ekstra yang murah HANYA untuk desktop
+          float v = noise(p) * 0.55;
+          v += noise(p * 2.1 + 12.3) * 0.28;
           if (uIsMobile < 0.5) {
-             v += noise(p * 2.0 + vec2(12.3)) * 0.3;
+            v += noise(p * 4.3 + 7.1) * 0.17;
           }
-          
-          return v * 1.2; // Normalisasi densitas
+          return v;
         }
 
-        // GLSL ES 1.0 Safe Bayer Matrix for Ordered Dithering
         float bayer4x4(vec2 screenPos) {
           vec2 p = floor(mod(screenPos, 4.0));
           float idx = p.y * 4.0 + p.x;
@@ -277,7 +257,6 @@ export function InteractiveFog({
         }
 
         void main() {
-          // --- Aspect Ratio Correction ---
           float aspect = uResolution.x / uResolution.y;
           vec2 uv = vUv * vec2(aspect, 1.0);
           vec2 mouse = (uMouse * 0.5 + 0.5) * vec2(aspect, 1.0);
@@ -285,117 +264,125 @@ export function InteractiveFog({
           vec2 screenCenter = vec2(0.5 * aspect, 0.5);
           float distToCenter = length(uv - screenCenter);
 
-          // P4: Reduced motion scale — disables all animations when active
           float motionScale = 1.0 - uReducedMotion;
 
-          // --- Mouse Vector ---
           vec2 mouseDir = uv - mouse;       
-          float mouseDist = length(mouseDir);
+          
+          // [PERBAIKAN VISUAL] Koreksi aspect ratio agar area interaksi mouse berbentuk lingkaran sempurna
+          float mouseDist = length(vec2(mouseDir.x / aspect, mouseDir.y));
           
           float activeFactor = clamp(uMouseVelocity * 0.8, 0.0, 1.0) * motionScale;
 
-          // --- 1. Mouse Displacement & Fluid Vortex Physics ---
-          float force = smoothstep(0.3, 0.0, mouseDist) * activeFactor;
-
-          // Linear displacement
-          vec2 displacement = normalize(mouseDir + 0.0001) * force * 0.08;
+          // 1. Directional Fluid Dynamics (bow wave + wake)
+          float force = smoothstep(0.35, 0.0, mouseDist) * activeFactor;
+          vec2 moveDir = normalize(uMouseDirection + 0.0001);
           
-          // Vortex Rotation (twist around cursor) — disabled when reduced motion
-          float swirlStrength = force * 0.15 * motionScale;
-          float s = sin(swirlStrength);
-          float c = cos(swirlStrength);
-          mat2 rot = mat2(c, -s, s, c);
+          // Gunakan mouseDir yang belum dinormalisasi aspect agar arahnya sesuai layar
+          vec2 pixelDir = normalize(mouseDir + 0.0001);
 
-          // Z-Scale Parallax (Zoom in saat scroll)
-          float zoomScale = 3.5 - (uScrollProgress * 5.0); 
-          vec2 noiseUv = uv * max(0.5, zoomScale);
+          float alignment = dot(pixelDir, moveDir);
 
-          // Base Drift — disabled when reduced motion
+          vec2 perpDir = vec2(-moveDir.y, moveDir.x);
+          float sideSign = sign(dot(pixelDir, perpDir));
+
+          float bowStrength = max(0.0, alignment) * force;
+          vec2 bowWave = perpDir * sideSign * bowStrength * 0.14;
+
+          vec2 forwardPush = moveDir * force * 0.07;
+
+          float wakeStrength = max(0.0, -alignment) * force * 0.6;
+          vec2 wake = -perpDir * sideSign * wakeStrength * 0.05;
+
+          float wakeAngle = wakeStrength * 0.4 / (mouseDist + 0.15) * motionScale;
+          float sv = sin(wakeAngle);
+          float cv = cos(wakeAngle);
+          mat2 wakeRot = mat2(cv, -sv, sv, cv);
+
+          vec2 displacement = bowWave + forwardPush + wake;
+
+          vec2 fromCenter = uv - screenCenter;
+          float scatterAmount = uScrollProgress * 2.5;
+          vec2 noiseUv = uv + fromCenter * scatterAmount;
+
           noiseUv += uTime * uDriftSpeed * motionScale;
           
-          // Apply Vortex Twist (skip on mobile for perf — P1)
           if (uIsMobile < 0.5) {
-            vec2 localUv = noiseUv - (mouse * max(0.5, zoomScale));
-            localUv = rot * localUv;
-            noiseUv = localUv + (mouse * max(0.5, zoomScale));
+            vec2 localUv = noiseUv - mouse;
+            localUv = wakeRot * localUv;
+            noiseUv = localUv + mouse;
           }
           
-          // Add Outward Push
           noiseUv += displacement * 2.5;
 
-          // P3: Breathing Animation — fog density pulsates organically
-          float breathe = 1.0 + sin(uTime * 0.5) * 0.08 * motionScale;
-          float rawFogDensity = fbm(noiseUv) * breathe;
+          float breathe = 1.0 + (sin(uTime * 0.4) * 0.06 + sin(uTime * 0.17) * 0.04 + sin(uTime * 0.71) * 0.03) * motionScale;
 
-          // --- 2. Pixelated Dithered Fog ---
+          float fogBank = noise(uv * 1.2 + uTime * 0.02 * motionScale) * 0.3 + 0.7;
+          float rawFogDensity = fbm(noiseUv) * breathe * fogBank;
+
+          float heightFade = smoothstep(0.0, 0.6, vUv.y);
+          rawFogDensity *= mix(1.0, 0.4, heightFade);
+
+          // 2. Dithering
           vec2 screenPx = vUv * uResolution;
           float dither = bayer4x4(screenPx);
-          float pixelFog = smoothstep(dither - 0.2, dither + 0.2, rawFogDensity);
-          float fogDensity = mix(rawFogDensity, pixelFog, 0.15);
+          float pixelFog = smoothstep(dither - 0.15, dither + 0.15, rawFogDensity);
+          float fogDensity = mix(rawFogDensity, pixelFog, 0.2);
 
-          // --- 3. Pseudo-Depth Integration (P4) ---
-          // Fog thins near screen center to reveal 3D content beneath
-          float depthMask = smoothstep(0.0, 0.6, distToCenter);
-          fogDensity *= mix(0.7, 1.0, depthMask);
+          // 3. Piercing Through Fog
+          float depthMask = smoothstep(0.0, 0.7, distToCenter);
+          fogDensity *= mix(0.65, 1.0, depthMask);
 
-          // --- 4. Transisi Tunneling + Curtain Split ---
-          float baseRadius = 0.04;
-          float scrollHoleRadius = uScrollProgress * 4.0; 
+          vec2 tearUv = normalize(uv - screenCenter + 0.0001);
+          float tearNoise = noise(tearUv * 5.0 + uTime * 0.2 * motionScale) * 0.2
+                          + noise(tearUv * 12.0 - uTime * 0.15 * motionScale) * 0.12;
+          float scrollHoleRadius = -1.0 + uScrollProgress * 5.5;
+          float tornEdge = scrollHoleRadius + tearNoise;
+          float tunnelClear = smoothstep(tornEdge, tornEdge + 0.6, distToCenter);
+
+          float scrollSpeed = clamp(uScrollProgress * 2.5, 0.0, 1.0);
+          vec2 radialDir = normalize(uv - screenCenter + 0.0001);
+          fogDensity *= mix(1.0, noise(uv * 3.0 + radialDir * scrollSpeed * 4.0), scrollSpeed * 0.3);
+
+          float edgeDist = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
+          float edgeWisp = smoothstep(0.0, 0.2, edgeDist);
+          float wispRetain = mix(1.0, edgeWisp, smoothstep(0.0, 0.35, uScrollProgress));
           
-          // Brush Distortion (memecah bentuk lingkaran kursor menjadi partikel/asap)
+          // Brush Distortion
           float brushNoise = fbm(uv * 12.0 - uTime * 0.8 * motionScale) * 0.15;
           float distortedMouseDist = mouseDist + brushNoise;
 
-          // Mouse clearing — P1: with Presence Mode (subtle idle clear)
-          float clearFactor = smoothstep(baseRadius, baseRadius + 0.15, distortedMouseDist);
-          float presenceClear = smoothstep(0.08, 0.22, distortedMouseDist); // always-active subtle clear
+          float clearFactor = smoothstep(0.04, 0.19, distortedMouseDist);
+          float presenceClear = smoothstep(0.08, 0.22, distortedMouseDist);
           float velocityClear = mix(1.0, clearFactor, activeFactor);
-          // Blend presence (always active) with velocity (movement-based)
           float mouseClear = min(velocityClear, mix(presenceClear, 1.0, 0.4));
           
-          // Scroll tunneling clearing
-          float tunnelClear = smoothstep(scrollHoleRadius, scrollHoleRadius + 0.80, distToCenter);
+          fogDensity *= mouseClear * tunnelClear * wispRetain;
 
-          // P3: Dynamic Curtain Split Effect
-          // Waktu transisi disinkronkan sempurna dengan jarak waypoint Hero (0.0) ke About (0.25)
-          float curtainOpen = smoothstep(0.0, 0.25, uScrollProgress);
-          
-          // Horizontal part (Membelah ke samping saat turun, Menutup ke tengah saat naik)
-          float curtainX = abs(vUv.x - 0.5);
-          float curtainMask = smoothstep(curtainOpen * 0.5, curtainOpen * 0.5 + 0.1, curtainX);
-
-          float scrollClear = min(tunnelClear, mix(1.0, curtainMask, curtainOpen));
-          
-          fogDensity *= (mouseClear * scrollClear);
-
-          // --- 5. Breathing Rim-Light & Chromatic Purity ---
+          // 4. Lighting & Rim Light
           float glow = smoothstep(0.3, 0.0, distortedMouseDist) * activeFactor;
           vec3 finalColor = mix(uFogColor, uHighlightColor, glow * 0.4);
 
-          // Breathing Pulse
           float pulse = 1.0 + sin(uTime * 4.0) * 0.15 * motionScale;
           float rimInner = smoothstep(0.03, 0.08, distortedMouseDist);
           float rimOuter = smoothstep(0.20, 0.12, distortedMouseDist);
           float rimLight = rimInner * rimOuter * uRimIntensity * pulse * activeFactor;
           
-          finalColor += uHighlightColor * rimLight;
+          finalColor = clamp(finalColor + uHighlightColor * rimLight, 0.0, 1.0);
 
-          // Chromatic Aberration — perf guard: skip if not active or on mobile
-          if (activeFactor > 0.01 && uIsMobile < 0.5) {
-            vec2 chromaOffset = normalize(mouseDir + 0.0001) * 0.015 * force;
-            float rChannel = fbm((noiseUv + chromaOffset) * 1.0);
-            float gChannel = rawFogDensity; 
-            float bChannel = fbm((noiseUv - chromaOffset) * 1.0);
-            vec3 chromaticFog = vec3(rChannel, gChannel, bChannel);
-            finalColor += chromaticFog * rimLight * 0.7;
+          // 5. Chromatic Shift
+          if (activeFactor > 0.01) {
+            float shift = rimLight * 0.2;
+            finalColor.r *= 1.0 + shift;
+            finalColor.b *= 1.0 - shift * 0.5;
+            finalColor = clamp(finalColor, 0.0, 1.0);
           }
 
-          // --- 6. Cinematic Vignette Framing (P3: per-theme intensity) ---
+          // 6. Vignette
           float vignetteRadius = mix(1.6, 1.2, uVignetteIntensity);
           float vignetteSmooth = mix(0.5, 0.3, uVignetteIntensity);
           float vignette = smoothstep(vignetteRadius, vignetteSmooth, length(vUv * 2.0 - 1.0));
+          
           float alpha = fogDensity * uOpacity * vignette;
-
           gl_FragColor = vec4(finalColor, alpha);
         }
       `,
@@ -405,8 +392,6 @@ export function InteractiveFog({
     });
   }, [uniforms]);
 
-  // Fullscreen quad using custom shader that bypasses view/projection matrices.
-  // Using args={[2, 2]} ensures vertices go from -1 to 1 in both axes (filling the NDC space completely).
   return (
     <mesh ref={meshRef} raycast={() => null}>
       <planeGeometry args={[2, 2]} />
@@ -415,7 +400,7 @@ export function InteractiveFog({
   );
 }
 
-/* ===== Scene Controller — manages lighting, fog, background ===== */
+// SceneController tetap dipertahankan karena implementasinya sudah sangat baik
 export function SceneController({ theme }: { theme: TimeTheme }) {
   const { scene } = useThree();
   const configRef = useRef(THEME_CONFIGS[theme]);
@@ -424,13 +409,11 @@ export function SceneController({ theme }: { theme: TimeTheme }) {
   const mainLightRef = useRef<THREE.DirectionalLight>(null);
   const fillLightRef = useRef<THREE.DirectionalLight>(null);
 
-  // Current interpolated values
   const currentBg = useRef(new THREE.Color(THEME_CONFIGS[theme].bgColor));
   const currentFogColor = useRef(new THREE.Color(THEME_CONFIGS[theme].fogColor));
   const currentFogNear = useRef(THEME_CONFIGS[theme].fogNear);
   const currentFogFar = useRef(THEME_CONFIGS[theme].fogFar);
 
-  // Cached target values — updated only on theme change, not per-frame
   const targetBgColor = useRef(new THREE.Color(THEME_CONFIGS[theme].bgColor));
   const targetSceneFogColor = useRef(new THREE.Color(THEME_CONFIGS[theme].fogColor));
   const targetAmbientColor = useRef(new THREE.Color(THEME_CONFIGS[theme].ambientColor));
@@ -451,12 +434,9 @@ export function SceneController({ theme }: { theme: TimeTheme }) {
 
   useFrame(() => {
     const cfg = configRef.current;
-
-    // Lerp background
     lerpColor(currentBg.current, targetBgColor.current, LERP_SPEED);
     scene.background = currentBg.current;
 
-    // Lerp fog
     if (scene.fog && scene.fog instanceof THREE.Fog) {
       lerpColor(currentFogColor.current, targetSceneFogColor.current, LERP_SPEED);
       scene.fog.color.copy(currentFogColor.current);
@@ -466,20 +446,17 @@ export function SceneController({ theme }: { theme: TimeTheme }) {
       scene.fog.far = currentFogFar.current;
     }
 
-    // Lerp ambient light
     if (ambientRef.current) {
       lerpColor(ambientRef.current.color, targetAmbientColor.current, LERP_SPEED);
       ambientRef.current.intensity = lerpNum(ambientRef.current.intensity, cfg.ambientIntensity, LERP_SPEED);
     }
 
-    // Lerp main directional light
     if (mainLightRef.current) {
       lerpColor(mainLightRef.current.color, targetMainLightColor.current, LERP_SPEED);
       mainLightRef.current.intensity = lerpNum(mainLightRef.current.intensity, cfg.mainLightIntensity, LERP_SPEED);
       mainLightRef.current.position.lerp(targetMainLightPos.current, LERP_SPEED);
     }
 
-    // Lerp fill light
     if (fillLightRef.current) {
       lerpColor(fillLightRef.current.color, targetFillLightColor.current, LERP_SPEED);
       fillLightRef.current.intensity = lerpNum(fillLightRef.current.intensity, cfg.fillLightIntensity, LERP_SPEED);

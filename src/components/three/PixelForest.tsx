@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Canvas } from '@react-three/fiber';
 import { EffectComposer, Pixelation } from '@react-three/postprocessing';
+import { useLenis } from 'lenis/react';
 import { TimeTheme } from '../../lib/useTimeTheme';
 import { THEME_CONFIGS } from '../../lib/themeConfig';
 
@@ -55,6 +56,7 @@ export default function PixelForest({
   try { playSfx = useAudio().playSfx; } catch {}
 
   const scrollProgress = useRef(0);
+  const lenis = useLenis();
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isSkillsOpen, setIsSkillsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -81,6 +83,42 @@ export default function PixelForest({
       scrollProgress.current = window.scrollY / maxScroll;
     }
   }, []);
+
+  // Synchronize scroll and camera position to location hash on load/start
+  useEffect(() => {
+    if (!lenis || !isStarted) return;
+
+    const handleInitialHash = () => {
+      const hash = window.location.hash;
+      if (hash) {
+        const targetEl = document.querySelector(hash);
+        if (targetEl) {
+          // Small delay to make sure DOM nodes are fully positioned and loading screen is fading
+          const timer = setTimeout(() => {
+            lenis.scrollTo(hash, {
+              offset: 0,
+              duration: 1.0,
+              lock: false,
+              immediate: true, // Snap instantly so camera starts at the correct position
+            });
+
+            // Re-sync scrollProgress ref immediately
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            if (maxScroll > 0) {
+              scrollProgress.current = window.scrollY / maxScroll;
+            }
+          }, 80);
+          return () => clearTimeout(timer);
+        }
+      }
+    };
+
+    handleInitialHash();
+    
+    // Also listen to hashchange event (Navbar clicks or manual URL changes)
+    window.addEventListener('hashchange', handleInitialHash);
+    return () => window.removeEventListener('hashchange', handleInitialHash);
+  }, [lenis, isStarted]);
 
   useEffect(() => {
     setMounted(true);
