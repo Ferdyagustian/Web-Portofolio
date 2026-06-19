@@ -8,9 +8,10 @@ interface PixelButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   href?: string;
   target?: string;
   rel?: string;
+  download?: string | boolean;
 }
 
-export default function PixelButton({ children, variant = "primary", className = "", href, target, rel, ...props }: PixelButtonProps) {
+export default function PixelButton({ children, variant = "primary", className = "", href, target, rel, download, ...props }: PixelButtonProps) {
   const isPrimary = variant === "primary";
   const [isHovered, setIsHovered] = useState(false);
   const [isActive, setIsActive] = useState(false);
@@ -77,7 +78,7 @@ export default function PixelButton({ children, variant = "primary", className =
 
   if (href) {
     return (
-      <a href={href} target={target} rel={rel} {...(commonProps as any)}>
+      <a href={href} target={target} rel={rel} download={download} {...(commonProps as any)}>
         {children}
       </a>
     );

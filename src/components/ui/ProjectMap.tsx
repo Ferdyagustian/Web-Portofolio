@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState, useMemo, useEffect } from "react";
-import { Move } from "lucide-react";
 import ProjectSignboard from "./ProjectSignboard";
 import { Project } from "../../lib/questData";
 
@@ -431,16 +430,7 @@ export default function ProjectMap({ projects, onSelectProject }: ProjectMapProp
               boxShadow: "4px 4px 0px rgba(0,0,0,0.5), 0 0 30px rgba(74,222,128,0.15)",
             }}
           >
-            ✥ DRAG TO EXPLORE ✥
-          </div>
-          <div
-            style={{
-              color: "var(--color-pixel-leaf)",
-              animation: "bounceHint 2s infinite",
-              filter: "drop-shadow(0 0 6px rgba(74,222,128,0.5))",
-            }}
-          >
-            <Move size={32} strokeWidth={2.5} />
+            DRAG TO EXPLORE
           </div>
         </div>
       )}
@@ -483,11 +473,6 @@ export default function ProjectMap({ projects, onSelectProject }: ProjectMapProp
           @keyframes dotPulse {
             0%, 100% { opacity: 0.15; }
             50% { opacity: 0.5; }
-          }
-          @keyframes bounceHint {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-14px); }
-            60% { transform: translateY(-7px); }
           }
           @keyframes hintFadeInOut {
             0% { opacity: 0; }

@@ -467,7 +467,7 @@ export default function MobileCarousel({ projects, onSelectProject }: MobileCaro
                       animation: currentIndex === i ? "pulseAcceptBtn 2s ease-in-out infinite" : "none",
                     }}
                   >
-                    ⚔ ACCEPT QUEST
+                    [!] ACCEPT QUEST
                   </button>
                 </div>
               </div>

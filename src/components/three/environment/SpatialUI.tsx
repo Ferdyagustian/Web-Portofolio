@@ -24,6 +24,7 @@ export function SpatialHTMLUI({
   playSfx,
   onQuestNavigate,
   performanceMode,
+  theme,
 }: {
   scrollProgress: React.RefObject<number>;
   formData: any;
@@ -39,6 +40,7 @@ export function SpatialHTMLUI({
   playSfx?: any;
   onQuestNavigate?: (slug: string) => void;
   performanceMode?: 'normal' | 'light' | 'potato';
+  theme: 'pagi' | 'siang' | 'sore' | 'malam';
 }) {
   const heroHtmlRef = useRef<HTMLDivElement>(null);
   const aboutPromptRef = useRef<HTMLDivElement>(null);
@@ -48,6 +50,18 @@ export function SpatialHTMLUI({
 
   const { size } = useThree();
   const isMobile = size.width < 768;
+
+  // Theme-based Accent Configuration for Typography (High-end visual design)
+  const getThemeAccent = () => {
+    switch (theme) {
+      case 'pagi': return { color: '#FFE066', glow: 'rgba(255, 224, 102, 0.6)' }; // Soft Morning Sun
+      case 'siang': return { color: '#64b5f6', glow: 'rgba(100, 181, 246, 0.6)' }; // Bright Sky Blue
+      case 'sore': return { color: '#f39c12', glow: 'rgba(243, 156, 18, 0.6)' }; // Deep Sunset Orange
+      case 'malam': return { color: '#ffea70', glow: 'rgba(255, 234, 112, 0.6)' }; // Firefly / Moon Accent
+      default: return { color: '#fbbf24', glow: 'rgba(251, 191, 36, 0.6)' };
+    }
+  };
+  const themeAccent = getThemeAccent();
 
   useFrame(() => {
     const sp = scrollProgress.current ?? 0;
@@ -140,9 +154,10 @@ export function SpatialHTMLUI({
                     ))}
                   </h1>
                 </div>
-                <div className="vt323-font hero-subtitle" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '0.4rem' }}>
-                  <span>AI Enthusiast</span>
-                  <span>CS UnderGraduate Student</span>
+                <div className="vt323-font hero-subtitle" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '0.2rem', color: 'rgba(250,243,224,0.8)' }}>
+                  <span>AI ENTHUSIAST</span>
+                  <span style={{ fontSize: '0.5rem', margin: '2px 0' }}><span style={{ color: themeAccent.color, textShadow: `0 0 10px ${themeAccent.glow}` }}>✦</span></span>
+                  <span>CS UNDERGRADUATE</span>
                 </div>
               </>
             ) : (
@@ -167,21 +182,13 @@ export function SpatialHTMLUI({
                     ))}
                   </h1>
                 </div>
-                <p className="vt323-font hero-subtitle">
-                  AI Enthusiast &nbsp;|&nbsp; CS UnderGraduate Student
+                <p className="vt323-font hero-subtitle" style={{ color: 'rgba(250,243,224,0.8)' }}>
+                  AI ENTHUSIAST <span style={{ color: themeAccent.color, textShadow: `0 0 10px ${themeAccent.glow}` }}>•</span> CS UNDERGRADUATE
                 </p>
               </>
             )}
           </div>
-          <div className="hero-scroll-arrow" style={{
-            marginTop: '1.5rem',
-            fontSize: '1.5rem',
-            textAlign: 'center',
-            color: 'var(--color-cream)',
-            textShadow: '2px 2px 0px var(--color-black)',
-          }}>
-            <span style={{ display: 'inline-block', animation: 'bounce 2s infinite' }}>▼</span>
-          </div>
+          {/* Bouncing arrow removed for cleaner UI */}
         </div>
       </Html>
 

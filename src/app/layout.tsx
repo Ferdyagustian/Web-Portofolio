@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   },
 };
 
-import { Sixtyfour, Pixelify_Sans, VT323 } from 'next/font/google';
+import { Sixtyfour, Pixelify_Sans, VT323, Inter } from 'next/font/google';
 
 const sixtyfour = Sixtyfour({
   subsets: ['latin'],
@@ -57,6 +57,12 @@ const vt323 = VT323({
   display: 'swap',
 });
 
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
 import PixelCursor from '../components/ui/PixelCursor';
 import Navbar from '../components/layout/Navbar';
 import TimeThemeProvider from '../providers/TimeThemeProvider';
@@ -69,7 +75,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" style={{ scrollBehavior: 'smooth' }} className={`${sixtyfour.variable} ${pixelify.variable} ${vt323.variable}`}>
+    <html lang="id" style={{ scrollBehavior: 'smooth' }} className={`${sixtyfour.variable} ${pixelify.variable} ${vt323.variable} ${inter.variable}`}>
       <body>
         <TimeThemeProvider>
           <AudioProvider>

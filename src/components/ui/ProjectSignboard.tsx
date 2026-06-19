@@ -255,22 +255,31 @@ export default function ProjectSignboard({
         </div>
 
         {/* Description — revealed on hover */}
+        {/* CSS Grid expand trick — no layout recalc, GPU-composited */}
         <div
-          className="pixelify-font"
           style={{
-            fontSize: "0.82rem",
-            color: "#333",
-            lineHeight: 1.6,
-            maxHeight: isHovered ? "200px" : "0",
-            overflow: "hidden",
+            display: "grid",
+            gridTemplateRows: isHovered ? "1fr" : "0fr",
             opacity: isHovered ? 1 : 0,
-            transition: "max-height 0.45s ease, opacity 0.35s ease, margin 0.35s ease",
+            transition: "grid-template-rows 0.4s ease, opacity 0.3s ease",
             marginBottom: isHovered ? "10px" : "0",
             position: "relative",
             zIndex: 2,
           }}
         >
-          {description}
+          <div style={{ overflow: "hidden" }}>
+            <p
+              className="pixelify-font"
+              style={{
+                fontSize: "0.82rem",
+                color: "#333",
+                lineHeight: 1.6,
+                margin: 0,
+              }}
+            >
+              {description}
+            </p>
+          </div>
         </div>
 
         {/* Tech Stack Tags */}

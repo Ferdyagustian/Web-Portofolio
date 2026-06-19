@@ -160,7 +160,7 @@ export default function QuestPopup({ project, onClose, playSfx, onQuestNavigate 
                 textShadow: "2px 2px 0px #000",
               }}
             >
-              ⚔ QUEST AVAILABLE ⚔
+              [ QUEST AVAILABLE ]
             </div>
             {/* Close button */}
             <button
@@ -187,7 +187,7 @@ export default function QuestPopup({ project, onClose, playSfx, onQuestNavigate 
                 (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.5)";
               }}
             >
-              ✕
+              X
             </button>
           </div>
 
@@ -306,7 +306,7 @@ export default function QuestPopup({ project, onClose, playSfx, onQuestNavigate 
                       className="pixel-font"
                       style={{ fontSize: "0.75rem", color: "#faf3e0" }}
                     >
-                      ⏱ {project.duration}
+                      {project.duration}
                     </div>
                   </div>
                 </div>
@@ -395,7 +395,7 @@ export default function QuestPopup({ project, onClose, playSfx, onQuestNavigate 
                       (e.currentTarget as HTMLButtonElement).style.boxShadow = "6px 6px 0px #000";
                     }}
                   >
-                    {alreadyAccepted ? "✓ LIHAT KEMBALI" : "✅ ACCEPT QUEST"}
+                    {alreadyAccepted ? "[OK] LIHAT KEMBALI" : "[!] ACCEPT QUEST"}
                   </button>
 
                   {/* Decline */}
@@ -425,7 +425,7 @@ export default function QuestPopup({ project, onClose, playSfx, onQuestNavigate 
                       (e.currentTarget as HTMLButtonElement).style.color = "rgba(250,243,224,0.5)";
                     }}
                   >
-                    ❌ DECLINE
+                    [X] DECLINE
                   </button>
                 </div>
 
@@ -441,7 +441,7 @@ export default function QuestPopup({ project, onClose, playSfx, onQuestNavigate 
                       opacity: 0.7,
                     }}
                   >
-                    ✓ Quest ini sudah pernah kamu terima sebelumnya
+                    Quest ini sudah pernah kamu terima sebelumnya
                   </div>
                 )}
               </>

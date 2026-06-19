@@ -2,6 +2,11 @@ import * as THREE from 'three';
 
 export const LERP_SPEED = 0.008; // ~2 seconds for full transition at 60fps
 
+/** Frame-rate independent lerp factor. Normalizes speed to 60fps using exponential decay. */
+export function frameLerp(speed: number, delta: number): number {
+  return 1 - Math.pow(1 - speed, delta * 60);
+}
+
 export function lerpColor(current: THREE.Color, target: THREE.Color, t: number) {
   current.r += (target.r - current.r) * t;
   current.g += (target.g - current.g) * t;
@@ -19,7 +24,7 @@ export interface Waypoint {
 
 export const WAYPOINTS: Waypoint[] = [
   { pos: [0, 2, 5], rot: [0, 0, 0] },          // Hero (t = 0)
-  { pos: [-2.5, 1.5, -9.2], rot: [0, 0.35, 2] }, // About (t = 0.25) (kiri/kanan,atas/bawah,maju/mundur)
+  { pos: [-1.8, 1.5, -9.2], rot: [-0.1, 0.45, 2] }, // About (t = 0.25) (kiri/kanan,atas/bawah,maju/mundur)
   { pos: [2.2, 1.9, -24], rot: [-0.05, -0.35, 0] }, // Skills (t = 0.5)
   { pos: [0, 1.8, -42], rot: [0, 0, 0] },       // Projects (t = 0.75)
   { pos: [0, 4.3, -52], rot: [0.3, 0, 0] }      // Contact (t = 1.0)

@@ -16,11 +16,11 @@ const getThemeAccentColor = (theme: string) => {
 
 // Retro Pixel Art Icons using SVGs with shape-rendering: crispEdges
 const SunIcon = () => (
-  <svg 
-    width="12" 
-    height="12" 
-    viewBox="0 0 12 12" 
-    fill="currentColor" 
+  <svg
+    width="12"
+    height="12"
+    viewBox="0 0 12 12"
+    fill="currentColor"
     style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle', shapeRendering: 'crispEdges' }}
   >
     <rect x="4" y="4" width="4" height="4" />
@@ -36,11 +36,11 @@ const SunIcon = () => (
 );
 
 const LightningIcon = () => (
-  <svg 
-    width="12" 
-    height="12" 
-    viewBox="0 0 12 12" 
-    fill="currentColor" 
+  <svg
+    width="12"
+    height="12"
+    viewBox="0 0 12 12"
+    fill="currentColor"
     style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle', shapeRendering: 'crispEdges' }}
   >
     <path d="M7,1 H5 L3,6 H6 L5,11 L9,5 H6 L7,1 Z" />
@@ -48,11 +48,11 @@ const LightningIcon = () => (
 );
 
 const PotatoIcon = () => (
-  <svg 
-    width="12" 
-    height="12" 
-    viewBox="0 0 12 12" 
-    fill="currentColor" 
+  <svg
+    width="12"
+    height="12"
+    viewBox="0 0 12 12"
+    fill="currentColor"
     style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle', shapeRendering: 'crispEdges' }}
   >
     <path d="M4,2 H8 V3 H10 V5 H11 V7 H10 V9 H8 V10 H4 V9 H2 V7 H1 V5 H2 V3 H4 Z" />
@@ -121,11 +121,11 @@ export function LoadingScreen({ onStart }: LoadingScreenProps) {
     if (e && (e.target as HTMLElement).closest('.performance-toggle')) return;
     if (isFading) return;
     setIsFading(true);
-    
+
     // Save preference when starting
     sessionStorage.setItem('visited_home', 'true');
     sessionStorage.setItem('performanceMode', performanceMode);
-    
+
     setTimeout(() => onStart(performanceMode), 150);
     setTimeout(() => setIsVisible(false), 400);
   }, [isFading, onStart, performanceMode]);
@@ -206,15 +206,15 @@ export function LoadingScreen({ onStart }: LoadingScreenProps) {
         zIndex: 5,
       }}>
         <h2 style={{
-          color: '#e2e8f0',
+          color: themeColor,
           marginBottom: '5rem',
           letterSpacing: '0.08em',
           fontSize: '1rem',
           fontFamily: 'var(--font-sixtyfour), monospace',
           textTransform: 'uppercase',
-          textShadow: '2px 2px 0px #000',
+          textShadow: `0 0 10px ${themeColor}40`,
         }}>
-          Loading{isLoaded ? '...' : dots}
+          {isLoaded ? 'WORLD READY' : `Loading${dots}`}
         </h2>
 
         {/* Progress bar */}
@@ -251,12 +251,13 @@ export function LoadingScreen({ onStart }: LoadingScreenProps) {
           display: 'flex',
           justifyContent: 'space-between',
           width: '100%',
-          color: '#94a3b8',
+          color: '#64748b',
           fontSize: '1.2rem',
           fontFamily: 'var(--font-vt323), monospace',
+          letterSpacing: '1px',
         }}>
-          <span>{isLoaded ? 'DONE' : 'INITIALIZING'}</span>
-          <span style={{ color: themeColor }}>
+          <span>{isLoaded ? '[ SYSTEM OK ]' : '[ LOADING DATA ]'}</span>
+          <span style={{ color: themeColor, textShadow: `0 0 8px ${themeColor}60` }}>
             {isLoaded ? '100%' : `${Math.floor(currentProgress)}%`}
           </span>
         </div>
@@ -268,96 +269,61 @@ export function LoadingScreen({ onStart }: LoadingScreenProps) {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '1.5rem',
+            gap: '2.5rem',
             transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
             opacity: isLoaded ? 1 : 0,
             transform: isLoaded ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(10px)',
           }}>
-            {/* Segmented Control for Performance Modes */}
-            <div 
-              className="performance-toggle pixel-font"
-              style={{
-                display: 'flex',
-                gap: '4px',
-                backgroundColor: '#111827',
-                padding: '6px',
-                borderRadius: '0px',
-                border: '2px solid #374151',
-                boxShadow: '4px 4px 0px #000000',
-                userSelect: 'none',
-              }}
-            >
-              <button
-                onClick={(e) => { e.stopPropagation(); setPerformanceMode('normal'); }}
-                style={{
-                  background: performanceMode === 'normal' ? 'linear-gradient(135deg, #4ade8022, transparent)' : 'transparent',
-                  color: performanceMode === 'normal' ? '#4ade80' : '#64748b',
-                  border: `2px solid ${performanceMode === 'normal' ? '#4ade80' : 'transparent'}`,
-                  borderRadius: '0px',
-                  padding: '8px 14px',
-                  fontSize: '0.65rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s steps(2)',
-                  textShadow: performanceMode === 'normal' ? '0 0 8px rgba(74, 222, 128, 0.4)' : 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <SunIcon /> Normal
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); setPerformanceMode('light'); }}
-                style={{
-                  background: performanceMode === 'light' ? 'linear-gradient(135deg, #60a5fa22, transparent)' : 'transparent',
-                  color: performanceMode === 'light' ? '#60a5fa' : '#64748b',
-                  border: `2px solid ${performanceMode === 'light' ? '#60a5fa' : 'transparent'}`,
-                  borderRadius: '0px',
-                  padding: '8px 14px',
-                  fontSize: '0.65rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s steps(2)',
-                  textShadow: performanceMode === 'light' ? '0 0 8px rgba(96, 165, 250, 0.4)' : 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <LightningIcon /> Light
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); setPerformanceMode('potato'); }}
-                style={{
-                  background: performanceMode === 'potato' ? 'linear-gradient(135deg, #fbbf2422, transparent)' : 'transparent',
-                  color: performanceMode === 'potato' ? '#fbbf24' : '#64748b',
-                  border: `2px solid ${performanceMode === 'potato' ? '#fbbf24' : 'transparent'}`,
-                  borderRadius: '0px',
-                  padding: '8px 14px',
-                  fontSize: '0.65rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s steps(2)',
-                  textShadow: performanceMode === 'potato' ? '0 0 8px rgba(251, 191, 36, 0.4)' : 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <PotatoIcon /> Ultra Potato
-              </button>
-            </div>
-
+            {/* Call To Action - Main Focus */}
             <span
               style={{
                 color: themeColor,
                 fontFamily: 'var(--font-sixtyfour), monospace',
                 letterSpacing: '0.05em',
-                fontSize: isMobile ? '0.45rem' : '0.55rem',
+                fontSize: isMobile ? '0.65rem' : '0.8rem',
                 textShadow: `0 0 12px ${themeColor}80`,
                 animation: isLoaded ? 'arcade-blink 1.0s steps(1) infinite' : 'none',
+                textAlign: 'center',
+                lineHeight: '1.6',
               }}
             >
-              CLICK ANYWHERE TO START
+              CLICK ANYWHERE<br />TO START
             </span>
+
+            {/* Segmented Control for Performance Modes - Arcade Bracket Style */}
+            <div
+              className="performance-toggle pixel-font"
+              style={{
+                display: 'flex',
+                gap: '1.5rem',
+                userSelect: 'none',
+              }}
+            >
+              {['normal', 'light', 'potato'].map((mode) => {
+                const isActive = performanceMode === mode;
+                const modeLabel = mode === 'potato' ? 'POTATO' : mode.toUpperCase();
+                return (
+                  <button
+                    key={mode}
+                    onClick={(e) => { e.stopPropagation(); setPerformanceMode(mode as any); }}
+                    style={{
+                      background: 'transparent',
+                      color: isActive ? themeColor : '#475569',
+                      border: 'none',
+                      padding: '4px',
+                      fontSize: '0.8rem',
+                      cursor: 'pointer',
+                      transition: 'color 0.2s',
+                      textShadow: isActive ? `0 0 8px ${themeColor}80` : 'none',
+                      fontFamily: 'var(--font-vt323), monospace',
+                      letterSpacing: '1px',
+                    }}
+                  >
+                    {isActive ? `[ ${modeLabel} ]` : modeLabel}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

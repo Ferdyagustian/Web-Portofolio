@@ -34,7 +34,7 @@ export default async function QuestDetailPage({ params }: Props) {
   return (
     <div
       style={{
-        minHeight: "100vh",
+        minHeight: "100dvh",
         backgroundColor: "#0d0f0a",
         color: "#faf3e0",
         fontFamily: "var(--font-pixelify), monospace",
@@ -104,7 +104,7 @@ export default async function QuestDetailPage({ params }: Props) {
               textShadow: "2px 2px 0px #000",
             }}
           >
-            ⚔ QUEST LOG
+            QUEST LOG
           </div>
 
           {/* Status badge */}
@@ -284,14 +284,14 @@ export default async function QuestDetailPage({ params }: Props) {
           }}
         >
           {/* --- OVERVIEW --- */}
-          <QuestSection icon="📜" title="OVERVIEW">
+          <QuestSection index={1} title="OVERVIEW">
             <p style={{ lineHeight: 1.8, color: "rgba(250,243,224,0.85)", fontSize: "0.95rem" }}>
               {quest.questContent.overview}
             </p>
           </QuestSection>
 
           {/* --- JOURNEY / TIMELINE --- */}
-          <QuestSection icon="🗺" title="PERJALANAN PEMBUATAN">
+          <QuestSection index={2} title="PERJALANAN PEMBUATAN">
             <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
               {quest.questContent.journey.map((step, i) => (
                 <div
@@ -370,7 +370,7 @@ export default async function QuestDetailPage({ params }: Props) {
 
           {/* --- MEDIA / EVIDENCE --- */}
           {quest.questContent.media.length > 0 && (
-            <QuestSection icon="🎬" title="BUKTI & DOKUMENTASI">
+            <QuestSection index={3} title="BUKTI & DOKUMENTASI">
               <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
                 {quest.questContent.media.map((item, i) => (
                   <div key={i}>
@@ -442,7 +442,7 @@ export default async function QuestDetailPage({ params }: Props) {
           )}
 
           {/* --- CHALLENGES --- */}
-          <QuestSection icon="⚠" title="TANTANGAN">
+          <QuestSection index={4} title="TANTANGAN">
             <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
               {quest.questContent.challenges.map((c, i) => (
                 <li
@@ -464,7 +464,7 @@ export default async function QuestDetailPage({ params }: Props) {
           </QuestSection>
 
           {/* --- LEARNINGS --- */}
-          <QuestSection icon="💡" title="YANG DIPELAJARI">
+          <QuestSection index={5} title="YANG DIPELAJARI">
             <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
               {quest.questContent.learnings.map((l, i) => (
                 <li
@@ -486,7 +486,7 @@ export default async function QuestDetailPage({ params }: Props) {
           </QuestSection>
 
           {/* --- REWARDS --- */}
-          <QuestSection icon="⚔" title="REWARDS DIPEROLEH">
+          <QuestSection index={6} title="REWARDS DIPEROLEH">
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
               {quest.questContent.rewards.map((r) => (
                 <span
@@ -530,7 +530,7 @@ export default async function QuestDetailPage({ params }: Props) {
                   marginBottom: "8px",
                 }}
               >
-                ✦ QUEST COMPLETE ✦
+                [ QUEST COMPLETE ]
               </div>
               <p
                 style={{
@@ -571,11 +571,11 @@ export default async function QuestDetailPage({ params }: Props) {
 
 // Reusable section wrapper
 function QuestSection({
-  icon,
+  index,
   title,
   children,
 }: {
-  icon: string;
+  index: number;
   title: string;
   children: React.ReactNode;
 }) {
@@ -592,7 +592,19 @@ function QuestSection({
           borderBottom: "2px solid rgba(255,255,255,0.06)",
         }}
       >
-        <span style={{ fontSize: "1.1rem" }}>{icon}</span>
+        {/* Section number instead of emoji icon */}
+        <span
+          style={{
+            fontFamily: "var(--font-sixtyfour), cursive",
+            fontSize: "0.5rem",
+            color: "rgba(251,191,36,0.45)",
+            letterSpacing: "2px",
+            flexShrink: 0,
+            minWidth: "22px",
+          }}
+        >
+          {String(index).padStart(2, "0")}
+        </span>
         <h2
           style={{
             fontFamily: "var(--font-sixtyfour), cursive",

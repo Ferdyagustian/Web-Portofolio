@@ -52,8 +52,8 @@ export default function PixelForest({
   // fires from the full wrapper div — not blocked by Drei Html overlay divs
   const containerRef = useRef<HTMLDivElement>(null);
 
-  let playSfx: any = () => {};
-  try { playSfx = useAudio().playSfx; } catch {}
+  let playSfx: any = () => { };
+  try { playSfx = useAudio().playSfx; } catch { }
 
   const scrollProgress = useRef(0);
   const lenis = useLenis();
@@ -66,7 +66,7 @@ export default function PixelForest({
   const [performanceMode, setPerformanceMode] = useState<'normal' | 'light' | 'potato'>('normal');
   const scrollToTopBtnRef = useRef<HTMLButtonElement>(null);
   const sectionDotsRef = useRef<HTMLElement>(null);
-  
+
   const SECTIONS = ['hero', 'about', 'skills', 'projects', 'contact'] as const;
   const SECTION_SCROLL_TARGETS: Record<typeof SECTIONS[number], string> = {
     hero: '#hero',
@@ -114,7 +114,7 @@ export default function PixelForest({
     };
 
     handleInitialHash();
-    
+
     // Also listen to hashchange event (Navbar clicks or manual URL changes)
     window.addEventListener('hashchange', handleInitialHash);
     return () => window.removeEventListener('hashchange', handleInitialHash);
@@ -227,9 +227,9 @@ export default function PixelForest({
 
   return (
     <div ref={containerRef} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 1, pointerEvents: 'auto' }}>
-      <Canvas 
-        dpr={performanceMode === 'potato' ? [0.5, 0.75] : performanceMode === 'light' ? [1, 1.2] : [1, 1.5]} 
-        eventSource={containerRef as React.RefObject<HTMLElement>} 
+      <Canvas
+        dpr={performanceMode === 'potato' ? [0.5, 0.75] : performanceMode === 'light' ? [1, 1.2] : [1, 1.5]}
+        eventSource={containerRef as React.RefObject<HTMLElement>}
         eventPrefix="client"
       >
         <color attach="background" args={[cfg.bgColor]} />
@@ -286,6 +286,7 @@ export default function PixelForest({
           playSfx={playSfx}
           onQuestNavigate={onQuestNavigate}
           performanceMode={performanceMode}
+          theme={theme}
         />
 
         {performanceMode === 'normal' && (
@@ -314,7 +315,7 @@ export default function PixelForest({
                     <div style={{ transform: isMobile ? 'scale(0.85)' : 'none', transformOrigin: 'center top', marginBottom: isMobile ? '-1.5rem' : '0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       <InteractiveAvatar isOpen={isAboutOpen} playSfx={playSfx} />
                       {!isMobile && (
-                        <div className="about-buttons" style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '2rem', width: '100%', padding: '0 10px' }}>
+                        <div className="about-buttons" style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '1.2rem', width: '100%', padding: '0 10px' }}>
                           <PixelButton
                             href="https://github.com/Ferdyagustian"
                             target="_blank"
@@ -328,26 +329,38 @@ export default function PixelForest({
                             href="https://www.linkedin.com/in/ferdy-agustian-5a3521247/"
                             target="_blank"
                             rel="noreferrer"
+                            variant="secondary"
                             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem' }}
                           >
                             <span className="pixel-font" style={{ fontSize: '0.6rem' }}>[IN]</span> LinkedIn
                           </PixelButton>
+                          <PixelButton
+                            href="/cv-template.pdf"
+                            download="Ferdy_Agustian_CV.pdf"
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem' }}
+                          >
+                            <span className="pixel-font" style={{ fontSize: '0.6rem' }}></span> Download CV
+                          </PixelButton>
                         </div>
                       )}
                     </div>
-                    <div style={{ flex: '1', minWidth: '250px', maxWidth: isMobile ? '100%' : '60ch', paddingLeft: isMobile ? '0' : '2rem', paddingRight: '1rem', maxHeight: isMobile ? '65vh' : '55vh', overflowY: 'auto' }} className="custom-scrollbar-container" data-lenis-prevent="true" onWheel={(e) => e.stopPropagation()}>
-                      <p style={{ marginBottom: '1.2rem', fontSize: isMobile ? '1.05rem' : '1.1rem', lineHeight: '1.8' }}>
-                        <span style={{ color: 'var(--color-accent, #ffd700)', fontWeight: 'bold', fontSize: '1.15rem' }}>Hello! (こんにちは!)</span> I am Ferdy Agustian Prasetyo, a final-year undergraduate student at <strong style={{ color: '#7dffb3' }}>Universitas Gunadarma</strong>.
+                    <div style={{ flex: '1', minWidth: '250px', maxWidth: isMobile ? '100%' : '80ch', paddingLeft: isMobile ? '0' : '3rem', paddingRight: '1.5rem', maxHeight: isMobile ? '65vh' : '55vh', overflowY: 'auto' }} className="custom-scrollbar-container sans-font" data-lenis-prevent="true" onWheel={(e) => e.stopPropagation()}>
+                      <p style={{ marginBottom: '1.2rem' }}>
+                        <span style={{ color: 'var(--color-accent-gold)', fontWeight: 'bold' }}>Hello! (こんにちは!)</span> I am Ferdy Agustian Prasetyo, a final-year undergraduate student at <strong style={{ color: 'var(--color-accent)' }}>Universitas Gunadarma</strong>.
                       </p>
-                      <p style={{ marginBottom: '1.2rem', fontSize: isMobile ? '1.05rem' : '1.1rem', lineHeight: '1.8' }}>
-                        I have a profound passion for <strong style={{ color: '#7dffb3' }}>Artificial Intelligence</strong> and <strong style={{ color: '#7dffb3' }}>Software Development</strong>, driven by a continuous desire to solve complex problems through code. I thrive on combining precise logic and creative design to build scalable applications that are not only visually engaging but also functionally impactful.
+                      <p style={{ marginBottom: '1.2rem' }}>
+                        I have a profound passion for <strong style={{ color: 'var(--color-accent)' }}>Artificial Intelligence</strong> and <strong style={{ color: 'var(--color-accent)' }}>Software Development</strong>, driven by a continuous desire to solve complex problems through code. I thrive on combining precise logic and creative design to build scalable applications that are not only visually engaging but also functionally impactful.
                       </p>
-                      <p style={{ marginBottom: '1.2rem', fontSize: isMobile ? '1.05rem' : '1.1rem', lineHeight: '1.8' }}>
-                        My technical journey spans across architecting robust <strong style={{ color: '#7dffb3' }}>backend systems</strong>, implementing advanced <strong style={{ color: '#7dffb3' }}>data security</strong> logic, and fine-tuning <strong style={{ color: '#7dffb3' }}>machine learning models</strong> to extract meaningful insights. Beyond just writing code, I am deeply committed to <em style={{ color: '#ffd700' }}>software quality</em> and <em style={{ color: '#ffd700' }}>structural integrity</em>. Whether I am conducting rigorous system testing, managing relational databases, or crafting interactive user interfaces, my ultimate goal is to deliver secure, flawless, and user-centric digital experiences.
+                      <p style={{ marginBottom: '1.2rem' }}>
+                        My technical journey spans across architecting robust <strong style={{ color: 'var(--color-accent)' }}>backend systems</strong>, implementing advanced <strong style={{ color: 'var(--color-accent)' }}>data security</strong> logic, and fine-tuning <strong style={{ color: 'var(--color-accent)' }}>machine learning models</strong> to extract meaningful insights. Beyond just writing code, I am deeply committed to <em style={{ color: 'var(--color-accent-gold)', fontStyle: 'italic' }}>software quality</em> and <em style={{ color: 'var(--color-accent-gold)', fontStyle: 'italic' }}>structural integrity</em>. Whether I am conducting rigorous system testing, managing relational databases, or crafting interactive user interfaces, my ultimate goal is to deliver secure, flawless, and user-centric digital experiences.
                       </p>
-                      <p style={{ marginBottom: '1.5rem', fontSize: '1.1rem', lineHeight: '1.7', color: 'rgba(255, 255, 255, 0.85)' }}>
-                        <em style={{ borderLeft: '3px solid #ffd700', paddingLeft: '10px', display: 'block' }}>I believe that the best products are built at the intersection of innovative algorithms and meticulous engineering. </em>
-                      </p>
+                      <div className="about-quote">
+                        <p className="about-quote-text">
+                          I believe that the best products are built at the intersection of innovative algorithms and meticulous engineering.
+                        </p>
+                      </div>
                       {isMobile && (
                         <div className="about-buttons" style={{ display: 'flex', gap: '1rem', marginTop: '2rem', flexWrap: 'wrap' }}>
                           <PixelButton
@@ -363,9 +376,19 @@ export default function PixelForest({
                             href="https://www.linkedin.com/in/ferdy-agustian-5a3521247/"
                             target="_blank"
                             rel="noreferrer"
+                            variant="secondary"
                             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                           >
                             <span className="pixel-font" style={{ fontSize: '0.6rem' }}>[IN]</span> LinkedIn
+                          </PixelButton>
+                          <PixelButton
+                            href="/cv-template.pdf"
+                            download="Ferdy_Agustian_CV.pdf"
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                          >
+                            <span className="pixel-font" style={{ fontSize: '0.6rem' }}>[CV]</span> Resume
                           </PixelButton>
                         </div>
                       )}

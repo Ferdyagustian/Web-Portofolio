@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { gsap } from "gsap";
 import { usePathname } from "next/navigation";
 import { useAudio } from "../../providers/AudioProvider";
+import { useTimeTheme } from "../../lib/useTimeTheme";
 
 import { useLenis } from 'lenis/react';
 
@@ -30,11 +31,13 @@ function NavLink({
   name,
   href,
   isActive,
+  accentColor,
 }: {
   name: string;
   href: string;
   section: string;
   isActive: boolean;
+  accentColor: string;
 }) {
   const linkRef = useRef<HTMLAnchorElement>(null);
   const arrowRef = useRef<HTMLSpanElement>(null);
@@ -49,6 +52,9 @@ function NavLink({
     if (!linkRef.current || !arrowRef.current || isHovered.current) return;
     isHovered.current = true;
     playSfx('hover');
+    
+    gsap.killTweensOf(linkRef.current);
+    gsap.killTweensOf(arrowRef.current);
     gsap.to(linkRef.current, {
       y: -4,
       duration: 0.1,
@@ -57,7 +63,7 @@ function NavLink({
       repeat: 1,
     });
     gsap.to(linkRef.current, {
-      color: "var(--color-pixel-leaf)",
+      color: `rgb(${accentColor})`,
       textShadow: "2px 2px 0px var(--color-black)",
       duration: 0.15,
     });
@@ -73,9 +79,13 @@ function NavLink({
   const handleLeave = useCallback(() => {
     if (!linkRef.current || !arrowRef.current) return;
     isHovered.current = false;
+
+    gsap.killTweensOf(linkRef.current);
+    gsap.killTweensOf(arrowRef.current);
+
     gsap.to(linkRef.current, {
       y: 0,
-      color: isActive ? "var(--color-pixel-leaf)" : "var(--color-cream)",
+      color: isActive ? `rgb(${accentColor})` : "var(--color-cream)",
       textShadow: "none",
       duration: 0.2,
     });
@@ -89,6 +99,7 @@ function NavLink({
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     playSfx('click');
+    handleLeave(); // Clean up hover state upon clicking
     if (lenis) {
       lenis.scrollTo(href, { offset: 0, duration: 1.5, lock: false });
     } else {
@@ -110,7 +121,7 @@ function NavLink({
         className="pixel-font nav-link-gsap"
         style={{
           textDecoration: 'none',
-          color: isActive ? 'var(--color-pixel-leaf)' : 'var(--color-cream)',
+          color: isActive ? `rgb(${accentColor})` : 'var(--color-cream)',
           fontSize: '0.8rem',
           position: 'relative',
           display: 'inline-flex',
@@ -126,7 +137,7 @@ function NavLink({
             fontSize: '0.7rem',
             opacity: 0,
             transform: 'translateX(-8px)',
-            color: 'var(--color-pixel-leaf)',
+            color: `rgb(${accentColor})`,
             display: 'inline-block',
           }}
           aria-hidden="true"
@@ -144,8 +155,8 @@ function NavLink({
           left: '0',
           right: '0',
           height: '3px',
-          backgroundColor: 'var(--color-pixel-leaf)',
-          boxShadow: '0 0 8px rgba(109, 216, 146, 0.6)',
+          backgroundColor: `rgb(${accentColor})`,
+          boxShadow: `0 0 8px rgba(${accentColor}, 0.6)`,
           opacity: isActive ? 1 : 0,
           transform: isActive ? 'scaleX(1)' : 'scaleX(0)',
           transformOrigin: 'left center',
@@ -163,20 +174,33 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState<SectionName>('hero');
   const logoRef = useRef<HTMLAnchorElement>(null);
+  const theme = useTimeTheme();
+
+  const getThemeStyles = () => {
+    switch (theme) {
+      case 'pagi': return { bg: 'rgba(20, 35, 45, 0.65)', accentRgb: '255, 224, 102' };
+      case 'siang': return { bg: 'rgba(15, 30, 50, 0.65)', accentRgb: '100, 181, 246' };
+      case 'sore': return { bg: 'rgba(25, 10, 30, 0.65)', accentRgb: '243, 156, 18' };
+      case 'malam': return { bg: 'rgba(10, 15, 25, 0.65)', accentRgb: '255, 234, 112' };
+      default: return { bg: 'rgba(5, 10, 5, 0.65)', accentRgb: '109, 216, 146' };
+    }
+  };
+  const themeStyles = getThemeStyles();
 
   let playSfx: (type: 'hover' | 'click' | 'option') => void = () => { };
   try { playSfx = useAudio().playSfx; } catch { /* outside provider */ }
 
+  // Lenis scroll callback — eliminates raw window.addEventListener('scroll') re-renders
+  useLenis(({ scroll }) => {
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    setScrolled(scroll > 50);
+    setActiveSection(getActiveSection(scroll, maxScroll));
+  });
+
+  // Initial check on mount (before first Lenis scroll event fires)
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      setScrolled(scrollY > 50);
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      setActiveSection(getActiveSection(scrollY, maxScroll));
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // initial check
-    return () => window.removeEventListener('scroll', handleScroll);
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    setActiveSection(getActiveSection(window.scrollY, maxScroll));
   }, []);
 
   const isLogoHovered = useRef(false);
@@ -211,19 +235,35 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="navbar-container" style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100%',
-      zIndex: 50,
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      transition: 'background-color 0.3s, border-bottom 0.3s',
-      backgroundColor: scrolled ? 'var(--color-forest-dark)' : 'transparent',
-      borderBottom: scrolled ? '4px solid var(--color-moss-green)' : '4px solid transparent',
-    }}>
+    <nav
+      data-floating-pill
+      className="navbar-container"
+      style={{
+        position: 'fixed',
+        top: '1.25rem',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 50,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: '2rem',
+        width: 'fit-content',
+        whiteSpace: 'nowrap',
+        borderRadius: '9999px',
+        padding: '0.6rem 1.5rem',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        backgroundColor: themeStyles.bg,
+        border: scrolled
+          ? `2px solid rgba(${themeStyles.accentRgb}, 0.40)`
+          : `2px solid rgba(${themeStyles.accentRgb}, 0.15)`,
+        boxShadow: scrolled
+          ? `0 0 32px rgba(${themeStyles.accentRgb}, 0.15), inset 0 1px 0 rgba(255,255,255,0.06)`
+          : `0 4px 24px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)`,
+        transition: 'border-color 0.4s ease, box-shadow 0.4s ease, background-color 0.4s ease',
+      }}
+    >
       <div
         className="pixel-font"
         style={{ fontSize: '1.2rem', color: 'var(--color-cream)', cursor: 'pointer' }}
@@ -247,6 +287,7 @@ export default function Navbar() {
             href={link.href}
             section={link.section}
             isActive={activeSection === link.section}
+            accentColor={themeStyles.accentRgb}
           />
         ))}
       </div>

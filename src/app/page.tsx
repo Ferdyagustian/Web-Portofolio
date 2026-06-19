@@ -221,11 +221,11 @@ export default function Home() {
 
       {/* Invisible Scroll Triggers for Lenis and GSAP ScrollTrigger */}
       <div style={{ position: 'relative', zIndex: 10, pointerEvents: 'none' }}>
-        <section id="hero" style={{ height: '100vh' }} />
-        <section id="about" style={{ height: '100vh' }} />
-        <section id="skills" style={{ height: '100vh' }} />
-        <section id="projects" style={{ height: '100vh' }} />
-        <section id="contact" style={{ height: '100vh' }} />
+        <section id="hero" style={{ minHeight: '100dvh' }} />
+        <section id="about" style={{ minHeight: '100dvh' }} />
+        <section id="skills" style={{ minHeight: '100dvh' }} />
+        <section id="projects" style={{ minHeight: '100dvh' }} />
+        <section id="contact" style={{ minHeight: '100dvh' }} />
       </div>
 
       <style dangerouslySetInnerHTML={{
@@ -257,7 +257,7 @@ export default function Home() {
               animation: 'pulseButton 1.5s infinite alternate ease-in-out'
             }}
           >
-            ✦ ENABLE 3D PARALLAX ✦
+            ENABLE 3D PARALLAX
           </button>
         </div>
       )}
