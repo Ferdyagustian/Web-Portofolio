@@ -284,7 +284,6 @@ export default function Navbar() {
             key={link.name}
             name={link.name}
             href={link.href}
-            section={link.section}
             isActive={activeSection === link.section}
             accentColor={themeStyles.accentRgb}
           />
