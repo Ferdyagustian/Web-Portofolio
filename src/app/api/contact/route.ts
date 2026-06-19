@@ -38,7 +38,7 @@ export async function POST(request: Request) {
       console.warn('CRITICAL: RESEND_API_KEY is not set. Emails are being mocked.');
       return NextResponse.json({ 
         success: false, 
-        error: 'P konfigurasi sistem belum lengkap (Missing API Key). Mohon hubungi administrator.',
+        error: 'Konfigurasi sistem belum lengkap (Missing API Key). Mohon hubungi administrator.',
         mocked: true 
       }, { status: 500 });
     }

@@ -14,54 +14,6 @@ const getThemeAccentColor = (theme: string) => {
   }
 };
 
-// Retro Pixel Art Icons using SVGs with shape-rendering: crispEdges
-const SunIcon = () => (
-  <svg
-    width="12"
-    height="12"
-    viewBox="0 0 12 12"
-    fill="currentColor"
-    style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle', shapeRendering: 'crispEdges' }}
-  >
-    <rect x="4" y="4" width="4" height="4" />
-    <rect x="5" y="1" width="2" height="1" />
-    <rect x="5" y="10" width="2" height="1" />
-    <rect x="1" y="5" width="1" height="2" />
-    <rect x="10" y="5" width="1" height="2" />
-    <rect x="2" y="2" width="1" height="1" />
-    <rect x="9" y="2" width="1" height="1" />
-    <rect x="2" y="9" width="1" height="1" />
-    <rect x="9" y="9" width="1" height="1" />
-  </svg>
-);
-
-const LightningIcon = () => (
-  <svg
-    width="12"
-    height="12"
-    viewBox="0 0 12 12"
-    fill="currentColor"
-    style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle', shapeRendering: 'crispEdges' }}
-  >
-    <path d="M7,1 H5 L3,6 H6 L5,11 L9,5 H6 L7,1 Z" />
-  </svg>
-);
-
-const PotatoIcon = () => (
-  <svg
-    width="12"
-    height="12"
-    viewBox="0 0 12 12"
-    fill="currentColor"
-    style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle', shapeRendering: 'crispEdges' }}
-  >
-    <path d="M4,2 H8 V3 H10 V5 H11 V7 H10 V9 H8 V10 H4 V9 H2 V7 H1 V5 H2 V3 H4 Z" />
-    <rect x="4" y="4" width="1" height="1" fill="#000" opacity="0.35" />
-    <rect x="7" y="7" width="1" height="1" fill="#000" opacity="0.35" />
-    <rect x="8" y="4" width="1" height="1" fill="#000" opacity="0.35" />
-  </svg>
-);
-
 interface LoadingScreenProps {
   onStart: (mode: 'normal' | 'light' | 'potato') => void;
 }

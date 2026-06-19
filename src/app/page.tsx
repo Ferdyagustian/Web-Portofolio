@@ -3,12 +3,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import PixelForest from '../components/three/PixelForest';
-import DialogueBox from '../components/ui/DialogueBox';
-import PixelCard from '../components/ui/PixelCard';
-import ObservableSkill from '../components/ui/ObservableSkill';
-import PixelButton from '../components/ui/PixelButton';
-import ProjectGallery from '../components/ui/ProjectGallery';
-import InteractiveAvatar from '../components/ui/InteractiveAvatar';
 import { useTheme } from '../providers/TimeThemeProvider';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';

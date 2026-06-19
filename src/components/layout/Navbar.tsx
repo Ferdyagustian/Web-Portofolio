@@ -35,7 +35,6 @@ function NavLink({
 }: {
   name: string;
   href: string;
-  section: string;
   isActive: boolean;
   accentColor: string;
 }) {

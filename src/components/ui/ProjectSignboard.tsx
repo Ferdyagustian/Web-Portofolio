@@ -10,8 +10,6 @@ interface SignboardProps {
   index: number;
   difficulty: Difficulty;
   status: QuestStatus;
-  githubUrl?: string;
-  liveUrl?: string;
   isHovered: boolean;
   onHover: () => void;
   onLeave: () => void;
@@ -28,6 +26,15 @@ const PIN_COLORS = [
   "#1abc9c", // teal
   "#e67e22", // dark orange
   "#e91e63", // pink
+];
+
+// Paper note background colors for variety (warm yellows/whites)
+const paperColors = [
+  "#fff9c4", // light yellow
+  "#fff3e0", // light peach
+  "#f3e5f5", // very light lavender
+  "#e8f5e9", // very light mint
+  "#e3f2fd", // very light blue
 ];
 
 export default function ProjectSignboard({
@@ -56,14 +63,6 @@ export default function ProjectSignboard({
 
   const pinColor = PIN_COLORS[index % PIN_COLORS.length];
 
-  // Paper note background colors for variety (warm yellows/whites)
-  const paperColors = [
-    "#fff9c4", // light yellow
-    "#fff3e0", // light peach
-    "#f3e5f5", // very light lavender
-    "#e8f5e9", // very light mint
-    "#e3f2fd", // very light blue
-  ];
   const paperColor = paperColors[index % paperColors.length];
 
   return (

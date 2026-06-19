@@ -2,6 +2,12 @@ import type { Metadata } from 'next';
 import './globals.css';
 import LenisProvider from '../providers/LenisProvider';
 import GSAPProvider from '../providers/GSAPProvider';
+import { Sixtyfour, Pixelify_Sans, VT323, Inter } from 'next/font/google';
+import PixelCursor from '../components/ui/PixelCursor';
+import Navbar from '../components/layout/Navbar';
+import TimeThemeProvider from '../providers/TimeThemeProvider';
+import AudioProvider from '../providers/AudioProvider';
+import SettingsMenu from '../components/ui/SettingsMenu';
 
 export const metadata: Metadata = {
   title: 'Ferdy Agustian | AI Enthusiast & Full-Stack Developer Portfolio',
@@ -35,7 +41,7 @@ export const metadata: Metadata = {
   },
 };
 
-import { Sixtyfour, Pixelify_Sans, VT323, Inter } from 'next/font/google';
+
 
 const sixtyfour = Sixtyfour({
   subsets: ['latin'],
@@ -63,11 +69,7 @@ const inter = Inter({
   display: 'swap',
 });
 
-import PixelCursor from '../components/ui/PixelCursor';
-import Navbar from '../components/layout/Navbar';
-import TimeThemeProvider from '../providers/TimeThemeProvider';
-import AudioProvider from '../providers/AudioProvider';
-import SettingsMenu from '../components/ui/SettingsMenu';
+
 
 export default function RootLayout({
   children,

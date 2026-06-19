@@ -63,15 +63,15 @@ export function SpatialHTMLUI({
   };
   const themeAccent = getThemeAccent();
 
+  const getOpacity = (val: number, s: number, ps: number, pe: number, e: number) => {
+    if (val < s || val > e) return 0;
+    if (val >= ps && val <= pe) return 1;
+    if (val < ps) return (val - s) / (ps - s);
+    return (e - val) / (e - pe);
+  };
+
   useFrame(() => {
     const sp = scrollProgress.current ?? 0;
-
-    const getOpacity = (val: number, s: number, ps: number, pe: number, e: number) => {
-      if (val < s || val > e) return 0;
-      if (val >= ps && val <= pe) return 1;
-      if (val < ps) return (val - s) / (ps - s);
-      return (e - val) / (e - pe);
-    };
 
     const oHero = getOpacity(sp, -0.1, 0.0, 0.1, 0.22);
     const oAbout = getOpacity(sp, 0.12, 0.22, 0.32, 0.42);

@@ -6,29 +6,29 @@ import { createPortal } from "react-dom";
 import Avatar3DCanvas from "../three/Avatar3DCanvas";
 import PixelButton from "./PixelButton";
 
-export default function InteractiveAvatar({ isOpen, playSfx }: { isOpen?: boolean; playSfx?: any }) {
-  const GACHA_IMAGES = [
-    '/gacha/meme1.jpg',
-    '/gacha/meme2.jpg',
-    '/gacha/meme3.jpg',
-    '/gacha/meme4.jpg',
-    '/gacha/meme5.jpg'
-  ];
+const GACHA_IMAGES = [
+  '/gacha/meme1.jpg',
+  '/gacha/meme2.jpg',
+  '/gacha/meme3.jpg',
+  '/gacha/meme4.jpg',
+  '/gacha/meme5.jpg'
+];
 
+// Fungsi untuk mendapatkan gambar acak yang pasti berbeda
+const getRandomDifferentImage = (images: string[], current: string) => {
+  if (images.length <= 1) return images[0] || '';
+  let newImg;
+  do {
+    newImg = images[Math.floor(Math.random() * images.length)];
+  } while (newImg === current);
+  return newImg;
+};
+
+export default function InteractiveAvatar({ isOpen, playSfx }: { isOpen?: boolean; playSfx?: any }) {
   const [is3DModalOpen, setIs3DModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [bgImage, setBgImage] = useState<string>('');
   const [isRolling, setIsRolling] = useState(false);
-
-  // Fungsi untuk mendapatkan gambar acak yang pasti berbeda
-  const getRandomDifferentImage = (current: string) => {
-    if (GACHA_IMAGES.length <= 1) return GACHA_IMAGES[0] || '';
-    let newImg;
-    do {
-      newImg = GACHA_IMAGES[Math.floor(Math.random() * GACHA_IMAGES.length)];
-    } while (newImg === current);
-    return newImg;
-  };
 
   useEffect(() => {
     setMounted(true);
@@ -39,7 +39,7 @@ export default function InteractiveAvatar({ isOpen, playSfx }: { isOpen?: boolea
   // Effect yang bereaksi setiap kali modal About dibuka
   useEffect(() => {
     if (isOpen) {
-      setBgImage(prev => getRandomDifferentImage(prev));
+      setBgImage(prev => getRandomDifferentImage(GACHA_IMAGES, prev));
     }
   }, [isOpen]);
 
@@ -56,7 +56,7 @@ export default function InteractiveAvatar({ isOpen, playSfx }: { isOpen?: boolea
     if (playSfx) playSfx('gacha_roll');
     
     const interval = setInterval(() => {
-      let randomImg = getRandomDifferentImage(currentImg);
+      let randomImg = getRandomDifferentImage(GACHA_IMAGES, currentImg);
       
       currentImg = randomImg;
       setBgImage(currentImg);

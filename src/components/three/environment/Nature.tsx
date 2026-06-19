@@ -11,14 +11,12 @@ import { LERP_SPEED, lerpColor, lerpNum } from './utils';
 /* ===== Trees ===== */
 export function Trees({ theme, performanceMode = 'normal' }: { theme: TimeTheme, performanceMode?: 'normal' | 'light' | 'potato' }) {
   const treeCount = performanceMode === 'potato' ? 15 : 35; // Reduced from 50
-  const configRef = useRef(THEME_CONFIGS[theme]);
   const trunkMatRef = useRef<THREE.MeshStandardMaterial>(null);
   const leavesMatRef = useRef<THREE.MeshStandardMaterial>(null);
   const targetTrunkColor = useRef(new THREE.Color(THEME_CONFIGS[theme].trunkColor));
   const targetLeavesColor = useRef(new THREE.Color(THEME_CONFIGS[theme].leavesColor));
 
   useEffect(() => {
-    configRef.current = THEME_CONFIGS[theme];
     targetTrunkColor.current.set(THEME_CONFIGS[theme].trunkColor);
     targetLeavesColor.current.set(THEME_CONFIGS[theme].leavesColor);
   }, [theme]);
@@ -83,11 +81,9 @@ export function Trees({ theme, performanceMode = 'normal' }: { theme: TimeTheme,
 export function GroundBushes({ theme, performanceMode = 'normal' }: { theme: TimeTheme, performanceMode?: 'normal' | 'light' | 'potato' }) {
   const count = performanceMode === 'potato' ? 0 : 25;
   const matRef = useRef<THREE.MeshStandardMaterial>(null);
-  const configRef = useRef(THEME_CONFIGS[theme]);
   const targetBushColor = useRef(new THREE.Color(THEME_CONFIGS[theme].bushColor));
 
   useEffect(() => {
-    configRef.current = THEME_CONFIGS[theme];
     targetBushColor.current.set(THEME_CONFIGS[theme].bushColor);
   }, [theme]);
 
