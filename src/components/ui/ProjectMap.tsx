@@ -360,8 +360,6 @@ export default function ProjectMap({ projects, onSelectProject }: ProjectMapProp
               index={i}
               difficulty={project.difficulty}
               status={project.status}
-              githubUrl={project.github_url}
-              liveUrl={project.live_url}
               isHovered={hoveredIndex === i}
               onHover={() => setHoveredIndex(i)}
               onLeave={() => setHoveredIndex(null)}
