@@ -7,7 +7,7 @@
 
 Portofolio interaktif bergaya **pixel art / RPG retro** yang dibangun di atas kanvas 3D interaktif. Seluruh konten (About, Skills, Projects, Contact) tidak dirender sebagai halaman statis saja, melainkan sebagai panel antarmuka spasial di atas dunia "Hutan Piksel" yang "hidup" dan "interaktif".
 
-🌐 **Live Demo:** [slowwalkferdy.vercel.app](https://slowwalkferdy.vercel.app)
+🌐 **Live Demo:** [slowwalkferdy.vercel.app](https://slowwalkferdy.site)
 
 ---
 
