@@ -1,6 +1,6 @@
 # 📖 DOKUMENTASI KODE — Pixel Portfolio (Ferdy Agustian)
 
-> **Terakhir diperbarui:** 14 Juni 2026  
+> **Terakhir diperbarui:** 19 Juni 2026  
 > **Framework:** Next.js 16 + React 19 + TypeScript  
 > **Dibuat oleh:** Ferdy Agustian Prasetyo  
 > **URL:** https://slowwalkferdy.vercel.app
@@ -344,6 +344,22 @@ Semua objek fisik 3D dan efek visual dipisah ke dalam modul kecil di dalam sub-d
 - Posisi reset ke atas saat turun terlalu jauh
 - Aktif semua tema, warna & opacity berubah per tema
 
+#### `Fireflies`
+- Instanced mesh partikel menyala kecil yang bergerak melayang (kunang-kunang)
+- Menggunakan kalkulasi `Math.sin` dan `Math.cos` untuk gerakan organik
+- Hanya aktif pada mode performa normal atau ringan (dimatikan di potato mode)
+
+#### `QuestBoardStand`
+- Geometri papan pengumuman 3D bergaya piksel sebagai penanda *waypoint* area proyek
+- Mendukung penerimaan bayangan dinamis (*shadows*)
+
+#### `WorkshopDecorations`
+- Mesh pelengkap dekorasi meja kerja dan peralatan di area *skills*
+
+#### `SpatialHTMLUI` (`SpatialUI.tsx`)
+- Wrapper fungsional memanfaatkan `Html` dari `@react-three/drei`
+- Merender teks HTML (seperti judul Hero) dan panel form Kontak seolah-olah menyatu pada titik koordinat absolut 3D
+
 #### `SceneController`
 - Mengatur pencahayaan (AmbientLight, DirectionalLight, HemisphereLight)
 - Mengatur `THREE.Fog` scene-wide
@@ -489,6 +505,21 @@ Wrapper yang menampilkan `ProjectSignboard` dalam grid untuk desktop.
 
 ### 8.10 ProjectMap (`ProjectMap.tsx`)
 Tampilan alternatif proyek dalam gaya **peta RPG 2D** (opsional, tersedia tapi mungkin tidak digunakan di UI utama).
+
+### 8.11 LoadingScreen (`LoadingScreen.tsx`)
+- Tampilan tabir (*curtain*) awal saat aplikasi pertama kali dimuat
+- Menampilkan video loop background atau *fallback* desain piksel warna solid
+- Menyediakan layar pemilihan **Mode Performa Grafis** (Normal / Light / Potato) yang sangat krusial bagi stabilitas memori di perangkat berat/ringan
+- Mencegah inisialisasi render 3D penuh hingga pengguna mengeklik mulai
+
+### 8.12 QuestPopup (`QuestPopup.tsx`)
+- Komponen rincian modal (*pop-up detail*) untuk menampilkan deskripsi spesifik proyek/quest
+- Menyematkan langsung integrasi video demonstrasi via **YouTube Iframe**
+- Mengimplementasikan `data-lenis-prevent="true"` untuk anti-interferensi kelancaran scroll saat user melihat-lihat deskripsi
+
+### 8.13 PixelCard (`PixelCard.tsx`)
+- Kontainer kotak dekoratif dasar bergaya retro dengan border piksel tebal
+- Digunakan sebagai *wrapper* generik untuk mengelompokkan elemen lain (seperti kategori-kategori pada halaman Skills)
 
 ---
 
@@ -787,3 +818,16 @@ Pada sesi pembaruan ini, beberapa perbaikan teknis dan penambahan fitur telah di
 ### 15.4 Standarisasi Favicon (Next.js App Router)
 - **Penanganan Konflik Ikon:** Menghapus secara permanen file statis `favicon.ico` bawaan struktur awal (opsi *fallback* Vercel) yang mengambil alih paksa prioritas ikon pada *browser*.
 - **Migrasi Struktur Ikon:** Memindahkan file `public/icon.png` ke koridor direktori utama `src/app/icon.png` (langkah ini secara mutlak mematuhi standar hierarki dari *App Router* milik Next.js versi 13 ke atas) serta membersihkan konfigurasi statik `icons` di `layout.tsx` agar Next.js mampu mendeteksi tipe mime dan me-*render* ikon *tab* dengan dinamis serta membangun tembolok (*cache header*) secara otomatis.
+
+---
+
+## 16. Log Pembaruan (19 Juni 2026)
+
+Pada pembaruan ini, telah dilakukan beberapa optimasi antarmuka pada fitur pengunduhan CV serta pembersihan konfigurasi kontrol versi repositori proyek.
+
+### 16.1 Optimasi UI & Fungsionalitas Komponen
+- **Penataan Hierarki Tombol:** Mengubah urutan tata letak interaktif pada modal *About* di `PixelForest.tsx` dengan memosisikan tombol "Download CV" persis di bawah tautan "LinkedIn" guna meningkatkan hierarki visual (berlaku untuk resolusi desktop dan mobile).
+- **Perbaikan Fungsionalitas Unduhan:** Memperbaiki arsitektur *props* pada `PixelButton.tsx` dengan menyematkan tipe data bawaan `download?: string | boolean`. Hal ini meresolusi kendala galat (*Type Error*) pada *TypeScript* secara holistik serta merutekan atribut ke elemen fundamental HTML `<a>` sehingga proses *download* dapat difasilitasi langsung oleh *browser*.
+
+### 16.2 Pembersihan Lingkungan Repositori
+- **Manajemen Git Ignore:** Memperbarui konfigurasi `.gitignore` dengan mengeksklusi direktori dan dokumen ekosistem internal agen AI (seperti `.agents/`, `.temp_skills/`, `AGENTS.md`, `CLAUDE.md`, `lint.txt`). Komponen tersebut secara proaktif dihapus dari pelacakan riwayat *Git Cache* agar tidak memengaruhi kebersihan rilis atau jejak infrastruktur pada proses *deployment*.
